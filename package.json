@@ -10,6 +10,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
   },
+  "engines": {
+    "node": ">=18"
+  },
   "repository": {
     "type": "git",
     "url": "http://local_proxy@127.0.0.1:41729/git/hfbaliza/pruforms"
@@ -19,6 +22,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@supabase/supabase-js": "^2.110.7",
     "express": "^5.2.1",
     "nodemailer": "^9.0.3",
     "pdf-lib": "^1.17.1"
