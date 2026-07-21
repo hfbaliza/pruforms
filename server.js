@@ -57,11 +57,13 @@ app.get('/api/health', (req, res) =>
 
 // ---------- form definitions ----------
 
-const DEFS_DIR = path.join(__dirname, 'definitions');
 const definitions = {};
-for (const file of fs.readdirSync(DEFS_DIR).filter((f) => f.endsWith('.json'))) {
-  const def = JSON.parse(fs.readFileSync(path.join(DEFS_DIR, file), 'utf8'));
-  definitions[def.id] = def;
+try {
+  for (const def of require('./definitions')) definitions[def.id] = def;
+} catch (err) {
+  // Never crash the whole function at cold start over definitions — log it so
+  // it shows up in the platform logs, and let /api/health report the count.
+  console.error('Failed to load form definitions:', err);
 }
 
 app.get('/api/forms', (req, res) => {
