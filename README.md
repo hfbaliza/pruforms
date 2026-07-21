@@ -12,6 +12,23 @@ answers if the wrong form was opened), **💾 Save**, and **👁 Preview PDF**
 autosave on every change, so an unfinished form can always be resumed from
 the home page.
 
+## Client / Admin workflow
+
+- **Clients** use the root link (`/`). They only ever see their own forms
+  (tracked in their browser). On submit, the form is locked, a copy is
+  downloadable, and the submission lands in the admin queue. Witness and
+  agent-signature questions are hidden from clients.
+- **Admin** uses `/admin`, protected by `ADMIN_PASSWORD` (set it in the
+  environment — the default is `pruforms-admin` and prints a warning). The
+  dashboard lists every submission with a **Needs review** badge; opening one
+  allows editing *any* answer, filling the admin-only witness/agent
+  signature pads, previewing, and **Finalize** — which regenerates the PDF
+  and marks the submission *Reviewed*.
+- The server enforces the roles: once submitted, edits/regeneration/deletes
+  require the admin token; the full session list is admin-only.
+- If `SMTP_*` and `ADMIN_EMAIL` are configured, the admin is emailed on each
+  new submission (set `PUBLIC_URL` so the email links to your deployment).
+
 ## Supported forms
 
 | Form | Fill strategy |
@@ -57,6 +74,31 @@ MAIL_FROM="Forms <forms@example.com>" npm start
   step, and export actions (download, print, save, email).
 
 Sessions and generated PDFs live in `data/` (gitignored).
+
+## Deploying
+
+This is a plain Node/Express server with file-based storage, so it needs a
+host with a **persistent process and disk**:
+
+- **Render / Railway / Fly.io / any VPS** — works as-is (`npm start`), no
+  extra services needed. Attach a persistent volume for `data/`.
+- **Vercel** — not sufficient on its own: serverless functions have no
+  persistent filesystem, so sessions and PDFs would disappear between
+  requests. To run on Vercel you would pair it with an external store
+  (e.g. Supabase Postgres + Storage, or Vercel Postgres/Blob) and replace
+  `lib/store.js` — the storage API (`createSession`, `readSession`,
+  `writeSession`, `listSessions`, `deleteSession`, `outputPath`) is the only
+  seam that needs swapping.
+
+Environment variables:
+
+| Variable | Purpose |
+|----------|---------|
+| `ADMIN_PASSWORD` | Password for `/admin` (required in production) |
+| `ADMIN_EMAIL` | Where new-submission notifications are sent |
+| `PUBLIC_URL` | Base URL used in notification links |
+| `SMTP_HOST/PORT/USER/PASS/SECURE`, `MAIL_FROM` | Email sending |
+| `PORT` | HTTP port (default 3000) |
 
 ## API overview
 

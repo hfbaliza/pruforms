@@ -320,6 +320,36 @@ textarea { min-height: 110px; resize: vertical; }
 
 .pdf-frame { width: 100%; height: 70vh; border: 1px solid var(--line); border-radius: 10px; margin-top: 22px; background: #fff; }
 
+/* ---------- badges & admin ---------- */
+
+.badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  padding: 2px 9px;
+  border-radius: 20px;
+  vertical-align: middle;
+}
+.badge-progress { background: #eef0f7; color: var(--muted); }
+.badge-submitted { background: #fdeaec; color: var(--pru-red-dark); }
+.badge-reviewed { background: #e2f5ea; color: var(--ok); }
+
+.login-card {
+  max-width: 380px;
+  margin: 60px auto;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 32px 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: center;
+}
+.login-card h2 { margin: 0; }
+.login-card p { margin: 0; color: var(--muted); font-size: 13.5px; }
+
 /* ---------- section pages (electronic form) ---------- */
 
 .form-toolbar {
