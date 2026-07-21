@@ -40,18 +40,30 @@ function requireAdmin(req, res, next) {
   next();
 }
 
+// Wrap an async route so rejected promises become 500s instead of hanging.
+const wrap = (fn) => (req, res) =>
+  Promise.resolve(fn(req, res)).catch((err) => {
+    console.error(`${req.method} ${req.path} failed:`, err);
+    if (!res.headersSent) res.status(500).json({ error: err.message });
+  });
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('/admin', (req, res) =>
   res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 
+app.get('/api/health', (req, res) =>
+  res.json({ ok: true, backend: store.backend, forms: Object.keys(definitions).length }));
+
 // ---------- form definitions ----------
 
-const DEFS_DIR = path.join(__dirname, 'definitions');
 const definitions = {};
-for (const file of fs.readdirSync(DEFS_DIR).filter((f) => f.endsWith('.json'))) {
-  const def = JSON.parse(fs.readFileSync(path.join(DEFS_DIR, file), 'utf8'));
-  definitions[def.id] = def;
+try {
+  for (const def of require('./definitions')) definitions[def.id] = def;
+} catch (err) {
+  // Never crash the whole function at cold start over definitions — log it so
+  // it shows up in the platform logs, and let /api/health report the count.
+  console.error('Failed to load form definitions:', err);
 }
 
 app.get('/api/forms', (req, res) => {
@@ -72,8 +84,6 @@ app.get('/api/forms/:id', (req, res) => {
 
 // ---------- session summaries ----------
 
-// Try to give the admin a human label for who filled the form, from the
-// well-known name answers each definition uses.
 function clientLabel(session) {
   const a = session.answers || {};
   const name =
@@ -101,37 +111,38 @@ function summarize(session) {
 
 // ---------- sessions ----------
 
-app.post('/api/sessions', (req, res) => {
+app.post('/api/sessions', wrap(async (req, res) => {
   const { formId } = req.body || {};
   if (!definitions[formId]) return res.status(400).json({ error: 'Unknown form' });
-  const session = store.createSession(formId);
+  const session = await store.createSession(formId);
   res.json(session);
-});
+}));
 
 // Admin: the full submission list.
-app.get('/api/sessions', requireAdmin, (req, res) => {
-  res.json(store.listSessions().map(summarize));
-});
+app.get('/api/sessions', requireAdmin, wrap(async (req, res) => {
+  const sessions = await store.listSessions();
+  res.json(sessions.map(summarize));
+}));
 
 // Clients: summaries of *their own* sessions (ids kept in their browser).
-app.post('/api/sessions/lookup', (req, res) => {
+app.post('/api/sessions/lookup', wrap(async (req, res) => {
   const ids = Array.isArray(req.body && req.body.ids) ? req.body.ids.slice(0, 100) : [];
   const out = [];
   for (const id of ids) {
     try {
-      const s = store.readSession(id);
+      const s = await store.readSession(id);
       if (s) out.push(summarize(s));
     } catch {
       /* skip invalid ids */
     }
   }
   res.json(out);
-});
+}));
 
-function loadSession(req, res) {
+async function loadSession(req, res) {
   let session = null;
   try {
-    session = store.readSession(req.params.id);
+    session = await store.readSession(req.params.id);
   } catch {
     /* invalid id */
   }
@@ -142,13 +153,13 @@ function loadSession(req, res) {
   return session;
 }
 
-app.get('/api/sessions/:id', (req, res) => {
-  const session = loadSession(req, res);
+app.get('/api/sessions/:id', wrap(async (req, res) => {
+  const session = await loadSession(req, res);
   if (session) res.json(session);
-});
+}));
 
-app.put('/api/sessions/:id/answers', (req, res) => {
-  const session = loadSession(req, res);
+app.put('/api/sessions/:id/answers', wrap(async (req, res) => {
+  const session = await loadSession(req, res);
   if (!session) return;
   // Once submitted, only the admin may change answers.
   if (session.status !== 'in_progress' && !isAdmin(req)) {
@@ -171,14 +182,14 @@ app.put('/api/sessions/:id/answers', (req, res) => {
   } else {
     return res.status(400).json({ error: 'Provide {id, value} or {answers}' });
   }
-  store.writeSession(session);
+  await store.writeSession(session);
   res.json({ ok: true, updatedAt: session.updatedAt });
-});
+}));
 
-app.delete('/api/sessions/:id', (req, res) => {
+app.delete('/api/sessions/:id', wrap(async (req, res) => {
   let session = null;
   try {
-    session = store.readSession(req.params.id);
+    session = await store.readSession(req.params.id);
   } catch {
     return res.status(400).json({ error: 'Invalid id' });
   }
@@ -186,12 +197,12 @@ app.delete('/api/sessions/:id', (req, res) => {
     return res.status(403).json({ error: 'Submitted forms can only be removed by the admin.' });
   }
   try {
-    store.deleteSession(req.params.id);
+    await store.deleteSession(req.params.id);
   } catch {
     return res.status(400).json({ error: 'Invalid id' });
   }
   res.json({ ok: true });
-});
+}));
 
 // ---------- email ----------
 
@@ -231,35 +242,30 @@ async function notifyAdminOfSubmission(session) {
 }
 
 // ---------- PDF generation & export ----------
+// PDFs are always regenerated from the stored answers, so no binary storage
+// is needed and the document always reflects the latest (admin-reviewed) data.
 
-app.get('/api/sessions/:id/preview.pdf', async (req, res) => {
-  const session = loadSession(req, res);
+app.get('/api/sessions/:id/preview.pdf', wrap(async (req, res) => {
+  const session = await loadSession(req, res);
   if (!session) return;
   const def = definitions[session.formId];
   if (!def) return res.status(500).json({ error: 'Definition missing' });
-  try {
-    const { bytes } = await generatePdf(def, session.answers);
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'inline; filename="preview.pdf"');
-    res.setHeader('Cache-Control', 'no-store');
-    res.send(bytes);
-  } catch (err) {
-    console.error('preview failed', err);
-    res.status(500).json({ error: `Preview failed: ${err.message}` });
-  }
-});
+  const { bytes } = await generatePdf(def, session.answers);
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', 'inline; filename="preview.pdf"');
+  res.setHeader('Cache-Control', 'no-store');
+  res.send(bytes);
+}));
 
-app.post('/api/sessions/:id/generate', async (req, res) => {
-  const session = loadSession(req, res);
+app.post('/api/sessions/:id/generate', wrap(async (req, res) => {
+  const session = await loadSession(req, res);
   if (!session) return;
   const def = definitions[session.formId];
   if (!def) return res.status(500).json({ error: 'Definition missing' });
   const admin = isAdmin(req);
 
   if (!admin && session.status !== 'in_progress') {
-    return res.status(403).json({
-      error: 'This form has already been submitted for review.',
-    });
+    return res.status(403).json({ error: 'This form has already been submitted for review.' });
   }
 
   // Clients must have answered every required client-visible question;
@@ -278,54 +284,45 @@ app.post('/api/sessions/:id/generate', async (req, res) => {
     }
   }
 
-  try {
-    const { bytes, problems } = await generatePdf(def, session.answers);
-    fs.writeFileSync(store.outputPath(session.id), bytes);
-    if (admin) {
-      session.status = 'reviewed';
-      session.reviewedAt = new Date().toISOString();
-    } else {
-      session.status = 'submitted';
-      session.submittedAt = new Date().toISOString();
-    }
-    store.writeSession(session);
-    if (!admin) notifyAdminOfSubmission(session);
-    res.json({
-      ok: true,
-      status: session.status,
-      problems,
-      url: `/api/sessions/${session.id}/pdf`,
-    });
-  } catch (err) {
-    console.error('generate failed', err);
-    res.status(500).json({ error: `PDF generation failed: ${err.message}` });
+  // Generate once to validate it renders and to surface any mapping problems.
+  const { problems } = await generatePdf(def, session.answers);
+  if (admin) {
+    session.status = 'reviewed';
+    session.reviewedAt = new Date().toISOString();
+  } else {
+    session.status = 'submitted';
+    session.submittedAt = new Date().toISOString();
   }
-});
+  await store.writeSession(session);
+  if (!admin) notifyAdminOfSubmission(session);
+  res.json({ ok: true, status: session.status, problems, url: `/api/sessions/${session.id}/pdf` });
+}));
 
-app.get('/api/sessions/:id/pdf', (req, res) => {
-  const session = loadSession(req, res);
+app.get('/api/sessions/:id/pdf', wrap(async (req, res) => {
+  const session = await loadSession(req, res);
   if (!session) return;
-  const p = store.outputPath(session.id);
-  if (!fs.existsSync(p)) {
+  if (session.status === 'in_progress' && !isAdmin(req)) {
     return res.status(404).json({ error: 'PDF not generated yet' });
   }
   const def = definitions[session.formId];
-  const name = `${def ? def.id : 'form'}-${session.id.slice(0, 8)}.pdf`;
+  if (!def) return res.status(500).json({ error: 'Definition missing' });
+  const { bytes } = await generatePdf(def, session.answers);
+  const name = `${def.id}-${session.id.slice(0, 8)}.pdf`;
   res.setHeader('Content-Type', 'application/pdf');
   const disposition = req.query.download === '1' ? 'attachment' : 'inline';
   res.setHeader('Content-Disposition', `${disposition}; filename="${name}"`);
-  res.send(fs.readFileSync(p));
-});
+  res.setHeader('Cache-Control', 'no-store');
+  res.send(bytes);
+}));
 
-app.post('/api/sessions/:id/email', async (req, res) => {
-  const session = loadSession(req, res);
+app.post('/api/sessions/:id/email', wrap(async (req, res) => {
+  const session = await loadSession(req, res);
   if (!session) return;
   const { to } = req.body || {};
   if (!to || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
     return res.status(400).json({ error: 'Valid "to" address required' });
   }
-  const p = store.outputPath(session.id);
-  if (!fs.existsSync(p)) {
+  if (session.status === 'in_progress') {
     return res.status(400).json({ error: 'Generate the PDF first' });
   }
   const transport = mailTransport();
@@ -335,22 +332,19 @@ app.post('/api/sessions/:id/email', async (req, res) => {
         'Email is not configured. Set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS and MAIL_FROM environment variables.',
     });
   }
-  try {
-    const def = definitions[session.formId];
-    await transport.sendMail({
-      from: process.env.MAIL_FROM || process.env.SMTP_USER,
-      to,
-      subject: `Completed form: ${def ? def.title : session.formId}`,
-      text: 'Please find the completed form attached.',
-      attachments: [
-        { filename: `${session.formId}.pdf`, path: p, contentType: 'application/pdf' },
-      ],
-    });
-    res.json({ ok: true });
-  } catch (err) {
-    res.status(500).json({ error: `Sending failed: ${err.message}` });
-  }
-});
+  const def = definitions[session.formId];
+  const { bytes } = await generatePdf(def, session.answers);
+  await transport.sendMail({
+    from: process.env.MAIL_FROM || process.env.SMTP_USER,
+    to,
+    subject: `Completed form: ${def ? def.title : session.formId}`,
+    text: 'Please find the completed form attached.',
+    attachments: [
+      { filename: `${session.formId}.pdf`, content: bytes, contentType: 'application/pdf' },
+    ],
+  });
+  res.json({ ok: true });
+}));
 
 // ---------- admin login ----------
 
@@ -364,8 +358,15 @@ app.post('/api/admin/login', (req, res) => {
   res.json({ ok: true, token: ADMIN_PASSWORD });
 });
 
-app.listen(PORT, () => {
-  console.log(`pruforms listening on http://localhost:${PORT}`);
-  console.log(`client link:  http://localhost:${PORT}/`);
-  console.log(`admin panel:  http://localhost:${PORT}/admin`);
-});
+// Start a server only when run directly; on Vercel the app is exported and
+// invoked as a serverless function (see api/index.js).
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`pruforms listening on http://localhost:${PORT}`);
+    console.log(`storage backend: ${store.backend}`);
+    console.log(`client link:  http://localhost:${PORT}/`);
+    console.log(`admin panel:  http://localhost:${PORT}/admin`);
+  });
+}
+
+module.exports = app;
