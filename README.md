@@ -1,9 +1,16 @@
-# Pru Forms — Guided Form Interview
+# Pru Forms — Electronic Form Filler
 
-Turns four Pru Life UK PDF forms into conversational, one-question-at-a-time
-interviews. Clients never see the original PDF while answering — they get a
-guided flow with typed inputs, a signature drawing pad, automatic saving, a
-review step, and a professionally filled, flattened PDF at the end.
+Turns four Pru Life UK PDF forms into clean electronic forms, filled page by
+page. Each page groups one topic (e.g. *Details of Policyowner*, *Addresses*,
+*Signatures*), with typed inputs, a signature drawing pad, automatic saving,
+a live **document preview** showing the answers placed on the official PDF,
+a review step, and a professionally filled, flattened PDF at the end.
+
+While filling, the toolbar offers **← All forms** (exit — keep or discard the
+answers if the wrong form was opened), **💾 Save**, and **👁 Preview PDF**
+(side-by-side view of the real form with current answers inserted). Answers
+autosave on every change, so an unfinished form can always be resumed from
+the home page.
 
 ## Supported forms
 
@@ -44,9 +51,10 @@ MAIL_FROM="Forms <forms@example.com>" npm start
   appearances, **flattens** the form, then draws signatures/overlays on top.
 - `server.js` — Express API: forms, sessions (auto-saved answers, resume
   later), PDF generation, download/print/email endpoints.
-- `public/` — dependency-free single-page app with the interview UI,
-  progress bar, signature pad (Clear/Undo/Redraw), review-and-edit step, and
-  export actions (download, print, save, email).
+- `public/` — dependency-free single-page app: page-per-section form UI with
+  progress steps, live PDF preview panel (`/api/sessions/:id/preview.pdf`),
+  signature pad (Clear/Undo/Redraw), save/exit controls, review-and-edit
+  step, and export actions (download, print, save, email).
 
 Sessions and generated PDFs live in `data/` (gitignored).
 

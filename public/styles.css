@@ -57,7 +57,9 @@ main#app {
   max-width: 860px;
   margin: 0 auto;
   padding: 28px 18px 60px;
+  transition: max-width 0.2s;
 }
+main#app.wide { max-width: 1380px; }
 
 .footer {
   text-align: center;
@@ -318,8 +320,107 @@ textarea { min-height: 110px; resize: vertical; }
 
 .pdf-frame { width: 100%; height: 70vh; border: 1px solid var(--line); border-radius: 10px; margin-top: 22px; background: #fff; }
 
+/* ---------- section pages (electronic form) ---------- */
+
+.form-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.toolbar-title { flex: 1; min-width: 220px; }
+.toolbar-title b { display: block; font-size: 15px; }
+.toolbar-title span { color: var(--muted); font-size: 12.5px; }
+.toolbar-actions { display: flex; gap: 8px; }
+
+.step-dot {
+  display: inline-block;
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--line);
+  margin-right: 5px;
+}
+.step-dot.done { background: #f0a6ab; }
+.step-dot.current { background: var(--pru-red); }
+
+.workspace { display: flex; gap: 20px; align-items: flex-start; }
+.workspace .form-col { flex: 1; min-width: 0; }
+.workspace.split .form-col { max-width: 54%; }
+
+.page-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 26px 28px 22px;
+  box-shadow: 0 4px 18px rgba(30, 30, 80, 0.05);
+}
+.page-title {
+  margin: 0 0 6px;
+  font-size: 20px;
+  color: var(--pru-red-dark);
+  border-bottom: 2px solid var(--pru-red);
+  padding-bottom: 8px;
+}
+
+.field { margin: 18px 0; padding: 2px 4px; border-radius: 8px; }
+.field-label { display: block; font-weight: 600; font-size: 14.5px; margin-bottom: 4px; }
+.field-label .req { color: var(--pru-red); }
+.field-help { color: var(--muted); font-size: 12.5px; margin-bottom: 6px; }
+.field-error { color: var(--pru-red-dark); font-size: 12.5px; margin-top: 4px; min-height: 0; }
+.field.error input, .field.error textarea, .field.error select { border-color: var(--pru-red); }
+.field.error { background: #fff5f5; }
+.field.flash { animation: flashbg 1.2s ease-out; }
+@keyframes flashbg { 0% { background: #ffe9c7; } 100% { background: transparent; } }
+
+.field .opt { padding: 10px 14px; font-size: 14px; }
+.sig-saved { display: flex; align-items: center; gap: 12px; }
+
+/* ---------- PDF preview panel ---------- */
+
+.preview-col {
+  width: 46%;
+  min-width: 320px;
+  position: sticky;
+  top: 76px;
+}
+.preview-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+  padding: 10px 14px;
+}
+.preview-head b { font-size: 14px; }
+.preview-note { flex: 1; color: var(--muted); font-size: 12px; }
+.preview-frame {
+  width: 100%;
+  height: calc(100vh - 210px);
+  min-height: 480px;
+  border: 1px solid var(--line);
+  border-radius: 0 0 12px 12px;
+  background: #525659;
+}
+
+.review-section h3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+@media (max-width: 900px) {
+  .workspace, .workspace.split { flex-direction: column; }
+  .workspace.split .form-col { max-width: 100%; }
+  .preview-col { width: 100%; position: static; }
+  .preview-frame { height: 60vh; }
+}
+
 @media (max-width: 560px) {
-  .qcard { padding: 22px 16px; }
+  .qcard, .page-card { padding: 22px 16px; }
   .qcard h2 { font-size: 18px; }
   .review-row { flex-direction: column; align-items: flex-start; gap: 4px; }
 }
