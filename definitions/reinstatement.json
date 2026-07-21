@@ -1,0 +1,2166 @@
+{
+  "id": "reinstatement",
+  "title": "Reinstatement Form",
+  "description": "Reinstate a lapsed individual policy — updating, redating, or premium resumption.",
+  "pdf": "reinstatement.pdf",
+  "sections": [
+    {
+      "id": "type",
+      "title": "Type of Reinstatement",
+      "questions": [
+        {
+          "id": "reinstatement_type",
+          "q": "What type of reinstatement are you requesting?",
+          "type": "radio",
+          "required": true,
+          "options": [
+            {
+              "value": "updating",
+              "label": "Updating"
+            },
+            {
+              "value": "redating",
+              "label": "Redating"
+            },
+            {
+              "value": "premium_resumption",
+              "label": "Premium Resumption"
+            }
+          ],
+          "map": [
+            {
+              "drawX": {
+                "page": 1,
+                "tat": [
+                  44,
+                  241.5
+                ],
+                "size": 8,
+                "when": "updating"
+              }
+            },
+            {
+              "drawX": {
+                "page": 1,
+                "tat": [
+                  44,
+                  269.5
+                ],
+                "size": 8,
+                "when": "redating"
+              }
+            },
+            {
+              "drawX": {
+                "page": 1,
+                "tat": [
+                  44,
+                  297.5
+                ],
+                "size": 8,
+                "when": "premium_resumption"
+              }
+            }
+          ]
+        },
+        {
+          "id": "requirements",
+          "q": "Which requirements are you submitting with this form?",
+          "help": "Tick everything that applies. If reinstating under a monthly mode of payment, one of the last two is strictly required.",
+          "type": "checkboxes",
+          "options": [
+            {
+              "value": "form",
+              "label": "Duly dated and signed Reinstatement Form"
+            },
+            {
+              "value": "underwriting",
+              "label": "Underwriting routine requirements"
+            },
+            {
+              "value": "payment",
+              "label": "Payment of reinstatement cost"
+            },
+            {
+              "value": "pdc",
+              "label": "Twelve (12) post-dated checks (PDC), PDC certification and PDC Monthly Agreement form"
+            },
+            {
+              "value": "autopay",
+              "label": "Proof of enrolment to auto-payment facility (Auto Charge, Auto Debit, PDC)"
+            }
+          ],
+          "map": [
+            {
+              "drawX": {
+                "page": 1,
+                "tat": [
+                  143,
+                  235.5
+                ],
+                "size": 7,
+                "when": "form"
+              }
+            },
+            {
+              "drawX": {
+                "page": 1,
+                "tat": [
+                  142,
+                  251.5
+                ],
+                "size": 7,
+                "when": "underwriting"
+              }
+            },
+            {
+              "drawX": {
+                "page": 1,
+                "tat": [
+                  143,
+                  260.5
+                ],
+                "size": 7,
+                "when": "payment"
+              }
+            },
+            {
+              "drawX": {
+                "page": 1,
+                "tat": [
+                  143,
+                  281.5
+                ],
+                "size": 7,
+                "when": "pdc"
+              }
+            },
+            {
+              "drawX": {
+                "page": 1,
+                "tat": [
+                  143,
+                  291.5
+                ],
+                "size": 7,
+                "when": "autopay"
+              }
+            }
+          ]
+        },
+        {
+          "id": "records_consent",
+          "q": "Do you consent to updating Pru Life UK’s records based on the Life Insured and Policyowner details provided in this form?",
+          "type": "checkbox",
+          "label": "Yes, I consent",
+          "map": [
+            {
+              "drawX": {
+                "page": 1,
+                "tat": [
+                  42.5,
+                  319.5
+                ],
+                "size": 8
+              }
+            }
+          ]
+        },
+        {
+          "id": "policy_num_1",
+          "q": "What is the policy number to reinstate?",
+          "type": "text",
+          "required": true,
+          "map": [
+            {
+              "drawComb": {
+                "page": 1,
+                "tat": [
+                  472.5,
+                  177
+                ],
+                "pitch": 11.6,
+                "count": 8,
+                "size": 8
+              }
+            }
+          ]
+        },
+        {
+          "id": "policy_num_2",
+          "q": "A second policy number, if this request covers another policy? (Skip if not.)",
+          "type": "text",
+          "map": [
+            {
+              "drawComb": {
+                "page": 1,
+                "tat": [
+                  472.5,
+                  191.5
+                ],
+                "pitch": 11.6,
+                "count": 8,
+                "size": 8
+              }
+            }
+          ]
+        },
+        {
+          "id": "policy_num_3",
+          "q": "A third policy number? (Skip if not.)",
+          "type": "text",
+          "map": [
+            {
+              "drawComb": {
+                "page": 1,
+                "tat": [
+                  472.5,
+                  206
+                ],
+                "pitch": 11.6,
+                "count": 8,
+                "size": 8
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "life_insured",
+      "title": "Details of Life Insured",
+      "questions": [
+        {
+          "id": "li_surname",
+          "q": "What is the Life Insured's surname?",
+          "type": "text",
+          "required": true,
+          "map": [
+            {
+              "draw": {
+                "page": 1,
+                "tbox": [
+                  37,
+                  360,
+                  256,
+                  13
+                ],
+                "size": 9
+              }
+            }
+          ]
+        },
+        {
+          "id": "li_given",
+          "q": "What is the Life Insured's given name?",
+          "type": "text",
+          "required": true,
+          "map": [
+            {
+              "draw": {
+                "page": 1,
+                "tbox": [
+                  37,
+                  381.5,
+                  256,
+                  13
+                ],
+                "size": 9
+              }
+            }
+          ]
+        },
+        {
+          "id": "li_middle",
+          "q": "What is the Life Insured's middle name?",
+          "type": "text",
+          "map": [
+            {
+              "draw": {
+                "page": 1,
+                "tbox": [
+                  37,
+                  404,
+                  256,
+                  13
+                ],
+                "size": 9
+              }
+            }
+          ]
+        },
+        {
+          "id": "li_other",
+          "q": "Does the Life Insured's have any other legal name or alias? If so, type it; otherwise skip.",
+          "type": "text",
+          "map": [
+            {
+              "draw": {
+                "page": 1,
+                "tbox": [
+                  37,
+                  426.5,
+                  210,
+                  13
+                ],
+                "size": 8
+              }
+            }
+          ]
+        },
+        {
+          "id": "li_suffix",
+          "q": "Name suffix (e.g. Jr., III)? Skip if none.",
+          "type": "text",
+          "map": [
+            {
+              "draw": {
+                "page": 1,
+                "tbox": [
+                  252,
+                  426.5,
+                  41,
+                  13
+                ],
+                "size": 8
+              }
+            }
+          ]
+        },
+        {
+          "id": "li_salutation",
+          "q": "Preferred salutation (e.g. Mr., Mrs., Miss)?",
+          "type": "text",
+          "map": [
+            {
+              "draw": {
+                "page": 1,
+                "tbox": [
+                  37,
+                  451.5,
+                  256,
+                  13
+                ],
+                "size": 9
+              }
+            }
+          ]
+        },
+        {
+          "id": "li_dob",
+          "q": "What is the Life Insured's date of birth?",
+          "type": "date",
+          "required": true,
+          "map": [
+            {
+              "drawComb": {
+                "page": 1,
+                "top": 478.5,
+                "size": 8.5,
+                "format": "date_digits",
+                "xs": [
+                  43.2,
+                  55.6,
+                  70,
+                  82.8,
+                  97.6,
+                  109.9,
+                  122.4,
+                  134.7
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "li_nationality",
+          "q": "What is the Life Insured's nationality?",
+          "type": "text",
+          "required": true,
+          "map": [
+            {
+              "draw": {
+                "page": 1,
+                "tbox": [
+                  151,
+                  478.5,
+                  142,
+                  13
+                ],
+                "size": 9
+              }
+            }
+          ]
+        },
+        {
+          "id": "li_mobile",
+          "q": "What is the Life Insured's mobile number?",
+          "type": "phone",
+          "required": true,
+          "map": [
+            {
+              "draw": {
+                "page": 1,
+                "tbox": [
+                  38,
+                  502.5,
+                  145,
+                  13
+                ],
+                "size": 9
+              }
+            }
+          ]
+        },
+        {
+          "id": "li_email",
+          "q": "What is the Life Insured's email address?",
+          "type": "email",
+          "map": [
+            {
+              "draw": {
+                "page": 1,
+                "tbox": [
+                  189,
+                  502.5,
+                  104,
+                  13
+                ],
+                "size": 8,
+                "upper": false
+              }
+            }
+          ]
+        },
+        {
+          "id": "li_address",
+          "q": "What is the Life Insured's present address?",
+          "help": "Number, street, municipality/city, province.",
+          "type": "textarea",
+          "required": true,
+          "map": [
+            {
+              "drawWrap": {
+                "page": 1,
+                "tbox": [
+                  37,
+                  527.5,
+                  256,
+                  28
+                ],
+                "size": 8,
+                "lineh": 13.5
+              }
+            }
+          ]
+        },
+        {
+          "id": "li_country",
+          "q": "Which country is that address in?",
+          "type": "text",
+          "required": true,
+          "map": [
+            {
+              "draw": {
+                "page": 1,
+                "tbox": [
+                  40,
+                  564,
+                  143,
+                  13
+                ],
+                "size": 9
+              }
+            }
+          ]
+        },
+        {
+          "id": "li_zip",
+          "q": "What is the ZIP code?",
+          "type": "text",
+          "map": [
+            {
+              "draw": {
+                "page": 1,
+                "tbox": [
+                  189,
+                  564,
+                  104,
+                  13
+                ],
+                "size": 9
+              }
+            }
+          ]
+        },
+        {
+          "id": "li_occupation",
+          "q": "What is the Life Insured's occupation?",
+          "help": "State exact duties; if a member of AFP/PNP, state rank.",
+          "type": "text",
+          "required": true,
+          "map": [
+            {
+              "draw": {
+                "page": 1,
+                "tbox": [
+                  37,
+                  589,
+                  256,
+                  13
+                ],
+                "size": 8
+              }
+            }
+          ]
+        },
+        {
+          "id": "li_income",
+          "q": "What is the Life Insured's gross annual income (in PhP)?",
+          "type": "number",
+          "required": true,
+          "map": [
+            {
+              "draw": {
+                "page": 1,
+                "tbox": [
+                  37,
+                  614,
+                  256,
+                  13
+                ],
+                "size": 9
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "policyowner",
+      "title": "Details of Policyowner",
+      "questions": [
+        {
+          "id": "po_same",
+          "q": "Is the Policyowner the same person as the Life Insured?",
+          "type": "radio",
+          "required": true,
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes, the same person"
+            },
+            {
+              "value": "no",
+              "label": "No, a different person"
+            }
+          ],
+          "map": [
+            {
+              "drawX": {
+                "page": 1,
+                "tat": [
+                  468.5,
+                  335
+                ],
+                "size": 7,
+                "when": "yes"
+              }
+            }
+          ]
+        },
+        {
+          "id": "po_surname",
+          "q": "What is the Policyowner's surname?",
+          "type": "text",
+          "required": true,
+          "showIf": [
+            {
+              "q": "po_same",
+              "eq": "no"
+            }
+          ],
+          "map": [
+            {
+              "draw": {
+                "page": 1,
+                "tbox": [
+                  309,
+                  360,
+                  249,
+                  13
+                ],
+                "size": 9
+              }
+            }
+          ]
+        },
+        {
+          "id": "po_given",
+          "q": "What is the Policyowner's given name?",
+          "type": "text",
+          "required": true,
+          "showIf": [
+            {
+              "q": "po_same",
+              "eq": "no"
+            }
+          ],
+          "map": [
+            {
+              "draw": {
+                "page": 1,
+                "tbox": [
+                  309,
+                  381.5,
+                  249,
+                  13
+                ],
+                "size": 9
+              }
+            }
+          ]
+        },
+        {
+          "id": "po_middle",
+          "q": "What is the Policyowner's middle name?",
+          "type": "text",
+          "showIf": [
+            {
+              "q": "po_same",
+              "eq": "no"
+            }
+          ],
+          "map": [
+            {
+              "draw": {
+                "page": 1,
+                "tbox": [
+                  309,
+                  404,
+                  249,
+                  13
+                ],
+                "size": 9
+              }
+            }
+          ]
+        },
+        {
+          "id": "po_other",
+          "q": "Does the Policyowner's have any other legal name or alias? If so, type it; otherwise skip.",
+          "type": "text",
+          "showIf": [
+            {
+              "q": "po_same",
+              "eq": "no"
+            }
+          ],
+          "map": [
+            {
+              "draw": {
+                "page": 1,
+                "tbox": [
+                  309,
+                  426.5,
+                  209,
+                  13
+                ],
+                "size": 8
+              }
+            }
+          ]
+        },
+        {
+          "id": "po_suffix",
+          "q": "Name suffix (e.g. Jr., III)? Skip if none.",
+          "type": "text",
+          "showIf": [
+            {
+              "q": "po_same",
+              "eq": "no"
+            }
+          ],
+          "map": [
+            {
+              "draw": {
+                "page": 1,
+                "tbox": [
+                  525,
+                  426.5,
+                  33,
+                  13
+                ],
+                "size": 8
+              }
+            }
+          ]
+        },
+        {
+          "id": "po_salutation",
+          "q": "Preferred salutation (e.g. Mr., Mrs., Miss)?",
+          "type": "text",
+          "showIf": [
+            {
+              "q": "po_same",
+              "eq": "no"
+            }
+          ],
+          "map": [
+            {
+              "draw": {
+                "page": 1,
+                "tbox": [
+                  309,
+                  451.5,
+                  249,
+                  13
+                ],
+                "size": 9
+              }
+            }
+          ]
+        },
+        {
+          "id": "po_dob",
+          "q": "What is the Policyowner's date of birth?",
+          "type": "date",
+          "required": true,
+          "showIf": [
+            {
+              "q": "po_same",
+              "eq": "no"
+            }
+          ],
+          "map": [
+            {
+              "drawComb": {
+                "page": 1,
+                "top": 478.5,
+                "size": 8.5,
+                "format": "date_digits",
+                "xs": [
+                  315.7,
+                  328.1,
+                  342.5,
+                  355.3,
+                  370.1,
+                  382.4,
+                  394.9,
+                  407.2
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "po_nationality",
+          "q": "What is the Policyowner's nationality?",
+          "type": "text",
+          "required": true,
+          "showIf": [
+            {
+              "q": "po_same",
+              "eq": "no"
+            }
+          ],
+          "map": [
+            {
+              "draw": {
+                "page": 1,
+                "tbox": [
+                  423,
+                  478.5,
+                  135,
+                  13
+                ],
+                "size": 9
+              }
+            }
+          ]
+        },
+        {
+          "id": "po_mobile",
+          "q": "What is the Policyowner's mobile number?",
+          "type": "phone",
+          "required": true,
+          "showIf": [
+            {
+              "q": "po_same",
+              "eq": "no"
+            }
+          ],
+          "map": [
+            {
+              "draw": {
+                "page": 1,
+                "tbox": [
+                  310,
+                  502.5,
+                  145,
+                  13
+                ],
+                "size": 9
+              }
+            }
+          ]
+        },
+        {
+          "id": "po_email",
+          "q": "What is the Policyowner's email address?",
+          "type": "email",
+          "showIf": [
+            {
+              "q": "po_same",
+              "eq": "no"
+            }
+          ],
+          "map": [
+            {
+              "draw": {
+                "page": 1,
+                "tbox": [
+                  461,
+                  502.5,
+                  97,
+                  13
+                ],
+                "size": 8,
+                "upper": false
+              }
+            }
+          ]
+        },
+        {
+          "id": "po_address",
+          "q": "What is the Policyowner's present address?",
+          "help": "Number, street, municipality/city, province.",
+          "type": "textarea",
+          "required": true,
+          "showIf": [
+            {
+              "q": "po_same",
+              "eq": "no"
+            }
+          ],
+          "map": [
+            {
+              "drawWrap": {
+                "page": 1,
+                "tbox": [
+                  309,
+                  527.5,
+                  249,
+                  28
+                ],
+                "size": 8,
+                "lineh": 13.5
+              }
+            }
+          ]
+        },
+        {
+          "id": "po_country",
+          "q": "Which country is that address in?",
+          "type": "text",
+          "required": true,
+          "showIf": [
+            {
+              "q": "po_same",
+              "eq": "no"
+            }
+          ],
+          "map": [
+            {
+              "draw": {
+                "page": 1,
+                "tbox": [
+                  312,
+                  564,
+                  143,
+                  13
+                ],
+                "size": 9
+              }
+            }
+          ]
+        },
+        {
+          "id": "po_zip",
+          "q": "What is the ZIP code?",
+          "type": "text",
+          "showIf": [
+            {
+              "q": "po_same",
+              "eq": "no"
+            }
+          ],
+          "map": [
+            {
+              "draw": {
+                "page": 1,
+                "tbox": [
+                  462,
+                  564,
+                  96,
+                  13
+                ],
+                "size": 9
+              }
+            }
+          ]
+        },
+        {
+          "id": "po_occupation",
+          "q": "What is the Policyowner's occupation?",
+          "help": "State exact duties; if a member of AFP/PNP, state rank.",
+          "type": "text",
+          "required": true,
+          "showIf": [
+            {
+              "q": "po_same",
+              "eq": "no"
+            }
+          ],
+          "map": [
+            {
+              "draw": {
+                "page": 1,
+                "tbox": [
+                  309,
+                  589,
+                  249,
+                  13
+                ],
+                "size": 8
+              }
+            }
+          ]
+        },
+        {
+          "id": "po_income",
+          "q": "What is the Policyowner's gross annual income (in PhP)?",
+          "type": "number",
+          "required": true,
+          "showIf": [
+            {
+              "q": "po_same",
+              "eq": "no"
+            }
+          ],
+          "map": [
+            {
+              "draw": {
+                "page": 1,
+                "tbox": [
+                  309,
+                  614,
+                  249,
+                  13
+                ],
+                "size": 9
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "payment",
+      "title": "Payment Information",
+      "questions": [
+        {
+          "id": "personally_paying",
+          "q": "Are you personally paying for this policy?",
+          "type": "radio",
+          "required": true,
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes — I, the Policyowner, am paying for this policy"
+            },
+            {
+              "value": "no",
+              "label": "No — a third-party payor will be paying (please also accomplish the KYC for third-party payor form)"
+            }
+          ],
+          "map": [
+            {
+              "drawX": {
+                "page": 1,
+                "tat": [
+                  176.5,
+                  653.5
+                ],
+                "size": 8,
+                "when": "yes"
+              }
+            },
+            {
+              "drawX": {
+                "page": 1,
+                "tat": [
+                  361.5,
+                  653.5
+                ],
+                "size": 8,
+                "when": "no"
+              }
+            }
+          ]
+        },
+        {
+          "id": "reinstatement_cost",
+          "q": "What is the reinstatement cost (amount you are paying)?",
+          "type": "number",
+          "map": [
+            {
+              "draw": {
+                "page": 1,
+                "tbox": [
+                  38,
+                  690.5,
+                  240,
+                  14
+                ],
+                "size": 9
+              }
+            }
+          ]
+        },
+        {
+          "id": "payment_method",
+          "q": "How will you pay?",
+          "type": "radio",
+          "required": true,
+          "options": [
+            {
+              "value": "credit",
+              "label": "Credit Card"
+            },
+            {
+              "value": "cash",
+              "label": "Cash"
+            },
+            {
+              "value": "cheque",
+              "label": "Cheque"
+            }
+          ],
+          "map": [
+            {
+              "drawX": {
+                "page": 1,
+                "tat": [
+                  289,
+                  692.5
+                ],
+                "size": 8,
+                "when": "credit"
+              }
+            },
+            {
+              "drawX": {
+                "page": 1,
+                "tat": [
+                  415,
+                  692.5
+                ],
+                "size": 8,
+                "when": "cash"
+              }
+            },
+            {
+              "drawX": {
+                "page": 1,
+                "tat": [
+                  511,
+                  692.5
+                ],
+                "size": 8,
+                "when": "cheque"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "insurability",
+      "title": "Statement of Insurability",
+      "intro": "This section should be completed by the Life Insured. The Policyowner portion should be completed if the Policy/ies has/have an existing payor waiver/payor term rider.",
+      "questions": [
+        {
+          "id": "soi_po_applies",
+          "q": "Does the Policyowner also need to answer the health questions? (Only if the policy has an existing payor waiver or payor term rider.)",
+          "type": "radio",
+          "required": true,
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes"
+            },
+            {
+              "value": "no",
+              "label": "No, Life Insured only"
+            }
+          ],
+          "map": []
+        },
+        {
+          "id": "soi_q1_li",
+          "q": "Life Insured — Is the Life Insured in good health, free from all diseases, deformities and abnormalities?",
+          "type": "radio",
+          "required": true,
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes"
+            },
+            {
+              "value": "no",
+              "label": "No"
+            }
+          ],
+          "map": [
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  363.5,
+                  117.5
+                ],
+                "size": 8,
+                "when": "yes"
+              }
+            },
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  393.5,
+                  117.5
+                ],
+                "size": 8,
+                "when": "no"
+              }
+            }
+          ]
+        },
+        {
+          "id": "soi_q1_po",
+          "q": "Policyowner — Is the Policyowner in good health, free from all diseases, deformities and abnormalities?",
+          "type": "radio",
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes"
+            },
+            {
+              "value": "no",
+              "label": "No"
+            }
+          ],
+          "showIf": {
+            "q": "soi_po_applies",
+            "eq": "yes"
+          },
+          "map": [
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  422.5,
+                  117.5
+                ],
+                "size": 8,
+                "when": "yes"
+              }
+            },
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  452.5,
+                  117.5
+                ],
+                "size": 8,
+                "when": "no"
+              }
+            }
+          ]
+        },
+        {
+          "id": "soi_q1_details",
+          "q": "Please give the details for that \"No\" answer.",
+          "type": "textarea",
+          "required": true,
+          "showIf": {
+            "or": [
+              {
+                "q": "soi_q1_li",
+                "eq": "no"
+              },
+              {
+                "q": "soi_q1_po",
+                "eq": "no"
+              }
+            ]
+          },
+          "map": [
+            {
+              "drawWrap": {
+                "page": 2,
+                "tbox": [
+                  479,
+                  115.5,
+                  84,
+                  24
+                ],
+                "size": 6,
+                "lineh": 6.5
+              }
+            }
+          ]
+        },
+        {
+          "id": "soi_q2a_li",
+          "q": "Life Insured — Since the issuance of the Policy/ies or the last reinstatement, has the Life Insured ever had any illness or recurrent illness, injury, medication, or disease?",
+          "type": "radio",
+          "required": true,
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes"
+            },
+            {
+              "value": "no",
+              "label": "No"
+            }
+          ],
+          "map": [
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  363.5,
+                  145.5
+                ],
+                "size": 8,
+                "when": "yes"
+              }
+            },
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  393.5,
+                  145.5
+                ],
+                "size": 8,
+                "when": "no"
+              }
+            }
+          ]
+        },
+        {
+          "id": "soi_q2a_po",
+          "q": "Policyowner — Since the issuance of the Policy/ies or the last reinstatement, has the Policyowner ever had any illness or recurrent illness, injury, medication, or disease?",
+          "type": "radio",
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes"
+            },
+            {
+              "value": "no",
+              "label": "No"
+            }
+          ],
+          "showIf": {
+            "q": "soi_po_applies",
+            "eq": "yes"
+          },
+          "map": [
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  422.5,
+                  145.5
+                ],
+                "size": 8,
+                "when": "yes"
+              }
+            },
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  452.5,
+                  145.5
+                ],
+                "size": 8,
+                "when": "no"
+              }
+            }
+          ]
+        },
+        {
+          "id": "soi_q2a_details",
+          "q": "Please give the details for that \"Yes\" answer.",
+          "type": "textarea",
+          "required": true,
+          "showIf": {
+            "or": [
+              {
+                "q": "soi_q2a_li",
+                "eq": "yes"
+              },
+              {
+                "q": "soi_q2a_po",
+                "eq": "yes"
+              }
+            ]
+          },
+          "map": [
+            {
+              "drawWrap": {
+                "page": 2,
+                "tbox": [
+                  479,
+                  143.5,
+                  84,
+                  20
+                ],
+                "size": 6,
+                "lineh": 6.5
+              }
+            }
+          ]
+        },
+        {
+          "id": "soi_q2b_li",
+          "q": "Life Insured — Ever had any medical consultation, hospitalization, or surgical operation due to any condition, or been prescribed for or attended by a physician or practitioner for any cause, or undergone any diagnostic test/s?",
+          "type": "radio",
+          "required": true,
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes"
+            },
+            {
+              "value": "no",
+              "label": "No"
+            }
+          ],
+          "map": [
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  363.5,
+                  167.5
+                ],
+                "size": 8,
+                "when": "yes"
+              }
+            },
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  393.5,
+                  167.5
+                ],
+                "size": 8,
+                "when": "no"
+              }
+            }
+          ]
+        },
+        {
+          "id": "soi_q2b_po",
+          "q": "Policyowner — Ever had any medical consultation, hospitalization, or surgical operation due to any condition, or been prescribed for or attended by a physician or practitioner for any cause, or undergone any diagnostic test/s?",
+          "type": "radio",
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes"
+            },
+            {
+              "value": "no",
+              "label": "No"
+            }
+          ],
+          "showIf": {
+            "q": "soi_po_applies",
+            "eq": "yes"
+          },
+          "map": [
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  422.5,
+                  167.5
+                ],
+                "size": 8,
+                "when": "yes"
+              }
+            },
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  452.5,
+                  167.5
+                ],
+                "size": 8,
+                "when": "no"
+              }
+            }
+          ]
+        },
+        {
+          "id": "soi_q2b_details",
+          "q": "Please give the details for that \"Yes\" answer.",
+          "type": "textarea",
+          "required": true,
+          "showIf": {
+            "or": [
+              {
+                "q": "soi_q2b_li",
+                "eq": "yes"
+              },
+              {
+                "q": "soi_q2b_po",
+                "eq": "yes"
+              }
+            ]
+          },
+          "map": [
+            {
+              "drawWrap": {
+                "page": 2,
+                "tbox": [
+                  479,
+                  165.5,
+                  84,
+                  18
+                ],
+                "size": 6,
+                "lineh": 6.5
+              }
+            }
+          ]
+        },
+        {
+          "id": "soi_q2c_li",
+          "q": "Life Insured — Ever been confined or hospitalized in a clinic, institution, or other medical facility?",
+          "type": "radio",
+          "required": true,
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes"
+            },
+            {
+              "value": "no",
+              "label": "No"
+            }
+          ],
+          "map": [
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  363.5,
+                  187.5
+                ],
+                "size": 8,
+                "when": "yes"
+              }
+            },
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  393.5,
+                  187.5
+                ],
+                "size": 8,
+                "when": "no"
+              }
+            }
+          ]
+        },
+        {
+          "id": "soi_q2c_po",
+          "q": "Policyowner — Ever been confined or hospitalized in a clinic, institution, or other medical facility?",
+          "type": "radio",
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes"
+            },
+            {
+              "value": "no",
+              "label": "No"
+            }
+          ],
+          "showIf": {
+            "q": "soi_po_applies",
+            "eq": "yes"
+          },
+          "map": [
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  422.5,
+                  187.5
+                ],
+                "size": 8,
+                "when": "yes"
+              }
+            },
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  452.5,
+                  187.5
+                ],
+                "size": 8,
+                "when": "no"
+              }
+            }
+          ]
+        },
+        {
+          "id": "soi_q2c_details",
+          "q": "Please give the details for that \"Yes\" answer.",
+          "type": "textarea",
+          "required": true,
+          "showIf": {
+            "or": [
+              {
+                "q": "soi_q2c_li",
+                "eq": "yes"
+              },
+              {
+                "q": "soi_q2c_po",
+                "eq": "yes"
+              }
+            ]
+          },
+          "map": [
+            {
+              "drawWrap": {
+                "page": 2,
+                "tbox": [
+                  479,
+                  185.5,
+                  84,
+                  12
+                ],
+                "size": 6,
+                "lineh": 6.5
+              }
+            }
+          ]
+        },
+        {
+          "id": "soi_q2d_li",
+          "q": "Life Insured — Ever changed the customary occupation, or country of residence?",
+          "type": "radio",
+          "required": true,
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes"
+            },
+            {
+              "value": "no",
+              "label": "No"
+            }
+          ],
+          "map": [
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  363.5,
+                  201.5
+                ],
+                "size": 8,
+                "when": "yes"
+              }
+            },
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  393.5,
+                  201.5
+                ],
+                "size": 8,
+                "when": "no"
+              }
+            }
+          ]
+        },
+        {
+          "id": "soi_q2d_po",
+          "q": "Policyowner — Ever changed the customary occupation, or country of residence?",
+          "type": "radio",
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes"
+            },
+            {
+              "value": "no",
+              "label": "No"
+            }
+          ],
+          "showIf": {
+            "q": "soi_po_applies",
+            "eq": "yes"
+          },
+          "map": [
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  422.5,
+                  201.5
+                ],
+                "size": 8,
+                "when": "yes"
+              }
+            },
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  452.5,
+                  201.5
+                ],
+                "size": 8,
+                "when": "no"
+              }
+            }
+          ]
+        },
+        {
+          "id": "soi_q2d_details",
+          "q": "Please give the details for that \"Yes\" answer.",
+          "type": "textarea",
+          "required": true,
+          "showIf": {
+            "or": [
+              {
+                "q": "soi_q2d_li",
+                "eq": "yes"
+              },
+              {
+                "q": "soi_q2d_po",
+                "eq": "yes"
+              }
+            ]
+          },
+          "map": [
+            {
+              "drawWrap": {
+                "page": 2,
+                "tbox": [
+                  479,
+                  199.5,
+                  84,
+                  16
+                ],
+                "size": 6,
+                "lineh": 6.5
+              }
+            }
+          ]
+        },
+        {
+          "id": "soi_q2e_li",
+          "q": "Life Insured — Ever had any application for life, accident or health insurance, or reinstatement that was declined, postponed, rated, or modified?",
+          "type": "radio",
+          "required": true,
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes"
+            },
+            {
+              "value": "no",
+              "label": "No"
+            }
+          ],
+          "map": [
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  363.5,
+                  219.5
+                ],
+                "size": 8,
+                "when": "yes"
+              }
+            },
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  393.5,
+                  219.5
+                ],
+                "size": 8,
+                "when": "no"
+              }
+            }
+          ]
+        },
+        {
+          "id": "soi_q2e_po",
+          "q": "Policyowner — Ever had any application for life, accident or health insurance, or reinstatement that was declined, postponed, rated, or modified?",
+          "type": "radio",
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes"
+            },
+            {
+              "value": "no",
+              "label": "No"
+            }
+          ],
+          "showIf": {
+            "q": "soi_po_applies",
+            "eq": "yes"
+          },
+          "map": [
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  422.5,
+                  219.5
+                ],
+                "size": 8,
+                "when": "yes"
+              }
+            },
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  452.5,
+                  219.5
+                ],
+                "size": 8,
+                "when": "no"
+              }
+            }
+          ]
+        },
+        {
+          "id": "soi_q2e_details",
+          "q": "Please give the details for that \"Yes\" answer.",
+          "type": "textarea",
+          "required": true,
+          "showIf": {
+            "or": [
+              {
+                "q": "soi_q2e_li",
+                "eq": "yes"
+              },
+              {
+                "q": "soi_q2e_po",
+                "eq": "yes"
+              }
+            ]
+          },
+          "map": [
+            {
+              "drawWrap": {
+                "page": 2,
+                "tbox": [
+                  479,
+                  217.5,
+                  84,
+                  16
+                ],
+                "size": 6,
+                "lineh": 6.5
+              }
+            }
+          ]
+        },
+        {
+          "id": "soi_q2f_li",
+          "q": "Life Insured — Experienced death among the immediate members of the family?",
+          "type": "radio",
+          "required": true,
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes"
+            },
+            {
+              "value": "no",
+              "label": "No"
+            }
+          ],
+          "map": [
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  363.5,
+                  237.5
+                ],
+                "size": 8,
+                "when": "yes"
+              }
+            },
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  393.5,
+                  237.5
+                ],
+                "size": 8,
+                "when": "no"
+              }
+            }
+          ]
+        },
+        {
+          "id": "soi_q2f_po",
+          "q": "Policyowner — Experienced death among the immediate members of the family?",
+          "type": "radio",
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes"
+            },
+            {
+              "value": "no",
+              "label": "No"
+            }
+          ],
+          "showIf": {
+            "q": "soi_po_applies",
+            "eq": "yes"
+          },
+          "map": [
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  422.5,
+                  237.5
+                ],
+                "size": 8,
+                "when": "yes"
+              }
+            },
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  452.5,
+                  237.5
+                ],
+                "size": 8,
+                "when": "no"
+              }
+            }
+          ]
+        },
+        {
+          "id": "soi_q2f_details",
+          "q": "Please give the details for that \"Yes\" answer.",
+          "type": "textarea",
+          "required": true,
+          "showIf": {
+            "or": [
+              {
+                "q": "soi_q2f_li",
+                "eq": "yes"
+              },
+              {
+                "q": "soi_q2f_po",
+                "eq": "yes"
+              }
+            ]
+          },
+          "map": [
+            {
+              "drawWrap": {
+                "page": 2,
+                "tbox": [
+                  479,
+                  235.5,
+                  84,
+                  17
+                ],
+                "size": 6,
+                "lineh": 6.5
+              }
+            }
+          ]
+        },
+        {
+          "id": "soi_q3_li",
+          "q": "Life Insured — For female clients: is she now pregnant? If yes, note how many months in the details.",
+          "type": "radio",
+          "required": true,
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes"
+            },
+            {
+              "value": "no",
+              "label": "No"
+            }
+          ],
+          "map": [
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  363.5,
+                  256.5
+                ],
+                "size": 8,
+                "when": "yes"
+              }
+            },
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  393.5,
+                  256.5
+                ],
+                "size": 8,
+                "when": "no"
+              }
+            }
+          ]
+        },
+        {
+          "id": "soi_q3_po",
+          "q": "Policyowner — For female clients: is she now pregnant? If yes, note how many months in the details.",
+          "type": "radio",
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes"
+            },
+            {
+              "value": "no",
+              "label": "No"
+            }
+          ],
+          "showIf": {
+            "q": "soi_po_applies",
+            "eq": "yes"
+          },
+          "map": [
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  422.5,
+                  256.5
+                ],
+                "size": 8,
+                "when": "yes"
+              }
+            },
+            {
+              "drawX": {
+                "page": 2,
+                "tat": [
+                  452.5,
+                  256.5
+                ],
+                "size": 8,
+                "when": "no"
+              }
+            }
+          ]
+        },
+        {
+          "id": "soi_q3_details",
+          "q": "Please give the details for that \"Yes\" answer.",
+          "type": "textarea",
+          "required": true,
+          "showIf": {
+            "or": [
+              {
+                "q": "soi_q3_li",
+                "eq": "yes"
+              },
+              {
+                "q": "soi_q3_po",
+                "eq": "yes"
+              }
+            ]
+          },
+          "map": [
+            {
+              "drawWrap": {
+                "page": 2,
+                "tbox": [
+                  479,
+                  254.5,
+                  84,
+                  14
+                ],
+                "size": 6,
+                "lineh": 6.5
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "declaration",
+      "title": "Declaration & Signatures",
+      "intro": "By signing, you declare and agree to the statements printed in the \"Please read carefully before signing\" section of the form, and acknowledge the Purpose Statement on data privacy.",
+      "questions": [
+        {
+          "id": "executed_place",
+          "q": "Where are you completing this form? (city/municipality)",
+          "type": "text",
+          "required": true,
+          "map": [
+            {
+              "draw": {
+                "page": 2,
+                "tbox": [
+                  152,
+                  577,
+                  195,
+                  14
+                ],
+                "size": 9
+              }
+            }
+          ]
+        },
+        {
+          "id": "executed_date",
+          "q": "What is today’s date?",
+          "type": "date",
+          "required": true,
+          "map": [
+            {
+              "drawComb": {
+                "page": 2,
+                "top": 579.5,
+                "size": 8,
+                "format": "date_digits",
+                "xs": [
+                  390.8,
+                  402.3,
+                  417.5,
+                  429.7,
+                  444.7,
+                  457,
+                  469.4,
+                  481.5
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "li_signature",
+          "q": "Life Insured — please draw your customary signature.",
+          "help": "This certifies that the signature appearing on all your forms and valid IDs is your customary signature.",
+          "type": "signature",
+          "required": true,
+          "map": [
+            {
+              "image": {
+                "page": 2,
+                "tbox": [
+                  252,
+                  648,
+                  133,
+                  46
+                ],
+                "grow": 1
+              }
+            },
+            {
+              "draw": {
+                "page": 2,
+                "tbox": [
+                  252,
+                  694,
+                  133,
+                  9
+                ],
+                "size": 7,
+                "align": "center",
+                "value": "{li_given} {li_middle} {li_surname}"
+              }
+            }
+          ]
+        },
+        {
+          "id": "po_signature",
+          "q": "Policyowner — please draw your customary signature (if other than the Life Insured).",
+          "type": "signature",
+          "showIf": {
+            "q": "po_same",
+            "eq": "no"
+          },
+          "map": [
+            {
+              "image": {
+                "page": 2,
+                "tbox": [
+                  414,
+                  648,
+                  133,
+                  46
+                ],
+                "grow": 1
+              }
+            },
+            {
+              "draw": {
+                "page": 2,
+                "tbox": [
+                  414,
+                  694,
+                  133,
+                  9
+                ],
+                "size": 7,
+                "align": "center",
+                "value": "{po_given} {po_middle} {po_surname}"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

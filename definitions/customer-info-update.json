@@ -1,0 +1,282 @@
+{
+  "id": "customer-info-update",
+  "title": "Customer Information Update",
+  "description": "Update your personal details, contact information, and addresses on record with Pru Life UK.",
+  "pdf": "customer-info-update.pdf",
+  "sections": [
+    {
+      "id": "policy",
+      "title": "Your policy",
+      "questions": [
+        {
+          "id": "policy_num_1",
+          "q": "What is your policy number?",
+          "help": "You can find this on your policy documents.",
+          "type": "text",
+          "required": true,
+          "map": [{ "text": "POLICYNUMBER-1.0", "size": 8 }]
+        },
+        {
+          "id": "more_policies",
+          "q": "Do you have another policy to update with this same request?",
+          "type": "radio",
+          "options": [
+            { "value": "yes", "label": "Yes" },
+            { "value": "no", "label": "No" }
+          ],
+          "map": []
+        },
+        {
+          "id": "policy_num_2",
+          "q": "What is your second policy number?",
+          "type": "text",
+          "showIf": { "q": "more_policies", "eq": "yes" },
+          "map": [{ "text": "POLICYNUMBER-1.1", "size": 8 }]
+        },
+        {
+          "id": "policy_num_3",
+          "q": "If you have a third policy, what is its policy number?",
+          "type": "text",
+          "showIf": { "q": "more_policies", "eq": "yes" },
+          "map": [{ "text": "POLICYNUMBER-1.2", "size": 8 }]
+        }
+      ]
+    },
+    {
+      "id": "policyowner",
+      "title": "Details of Policyowner",
+      "questions": [
+        {
+          "id": "surname",
+          "q": "What is your surname?",
+          "type": "text",
+          "required": true,
+          "map": [{ "text": "TEXT-A-1.0.0", "size": 9 }]
+        },
+        {
+          "id": "given_name",
+          "q": "What is your given name?",
+          "type": "text",
+          "required": true,
+          "map": [{ "lines": ["TEXT-A-1.1.0", "TEXT-A-1.2.0"], "chars": 48, "size": 9 }]
+        },
+        {
+          "id": "middle_name",
+          "q": "What is your middle name?",
+          "help": "Leave blank if you do not have one.",
+          "type": "text",
+          "map": [{ "text": "TEXT-A-1.3.0", "size": 9 }]
+        },
+        {
+          "id": "other_name",
+          "q": "Do you have any other legal name or alias?",
+          "help": "If yes, type it here; otherwise skip this question.",
+          "type": "text",
+          "map": [{ "text": "TEXT-A-1.5.0", "size": 9 }]
+        },
+        {
+          "id": "mobile",
+          "q": "What is your mobile number?",
+          "type": "phone",
+          "required": true,
+          "map": [{ "text": "TEXT-A-1.6.0", "size": 9 }]
+        },
+        {
+          "id": "telephone",
+          "q": "What is your telephone (landline) number?",
+          "type": "phone",
+          "map": [{ "text": "TEXT-A-1.4.0", "size": 9 }]
+        },
+        {
+          "id": "email",
+          "q": "What is your email address?",
+          "type": "email",
+          "required": true,
+          "map": [{ "text": "TEXT-A-1.8.0", "size": 9 }]
+        }
+      ]
+    },
+    {
+      "id": "addresses",
+      "title": "Addresses",
+      "questions": [
+        {
+          "id": "present_address",
+          "q": "What is your present address?",
+          "help": "Number, street, municipality/city, province.",
+          "type": "textarea",
+          "required": true,
+          "map": [{ "text": "TEXT-A-1.0.1", "multiline": true, "size": 8 }]
+        },
+        {
+          "id": "present_country",
+          "q": "Which country is your present address in?",
+          "type": "text",
+          "required": true,
+          "map": [{ "text": "TEXT-A-1.2.1", "size": 9 }]
+        },
+        {
+          "id": "present_zip",
+          "q": "What is the ZIP code of your present address?",
+          "type": "text",
+          "map": [{ "text": "TEXT-A-1.3.1", "size": 9 }]
+        },
+        {
+          "id": "perm_same",
+          "q": "Is your permanent address the same as your present address?",
+          "type": "radio",
+          "required": true,
+          "options": [
+            { "value": "yes", "label": "Yes, same as present address" },
+            { "value": "no", "label": "No, it is different" }
+          ],
+          "map": [{ "check": "TICK-1", "when": { "q": "perm_same", "eq": "yes" } }]
+        },
+        {
+          "id": "perm_address",
+          "q": "What is your permanent address?",
+          "help": "Number, street, municipality/city, province.",
+          "type": "textarea",
+          "required": true,
+          "showIf": { "q": "perm_same", "eq": "no" },
+          "map": [{ "text": "TEXT-A-1.4.1", "multiline": true, "size": 8 }]
+        },
+        {
+          "id": "perm_country",
+          "q": "Which country is your permanent address in?",
+          "type": "text",
+          "showIf": { "q": "perm_same", "eq": "no" },
+          "map": [{ "text": "TEXT-A-1.5.1", "size": 9 }]
+        },
+        {
+          "id": "perm_zip",
+          "q": "What is the ZIP code of your permanent address?",
+          "type": "text",
+          "showIf": { "q": "perm_same", "eq": "no" },
+          "map": [{ "text": "TEXT-A-1.6.1", "size": 9 }]
+        },
+        {
+          "id": "emp_same",
+          "q": "Is your employer/business address the same as your present address?",
+          "type": "radio",
+          "options": [
+            { "value": "yes", "label": "Yes, same as present address" },
+            { "value": "no", "label": "No, it is different" },
+            { "value": "na", "label": "Not applicable" }
+          ],
+          "map": [{ "check": "TICK-2", "when": { "q": "emp_same", "eq": "yes" } }]
+        },
+        {
+          "id": "emp_address",
+          "q": "What is your employer/business address?",
+          "help": "Number, street, municipality/city, province.",
+          "type": "textarea",
+          "showIf": { "q": "emp_same", "eq": "no" },
+          "map": [{ "text": "TEXT-A-1.7.1", "multiline": true, "size": 8 }]
+        },
+        {
+          "id": "emp_country",
+          "q": "Which country is your employer/business address in?",
+          "type": "text",
+          "showIf": { "q": "emp_same", "eq": "no" },
+          "map": [{ "text": "TEXT-A-1.9.1", "size": 9 }]
+        },
+        {
+          "id": "emp_zip",
+          "q": "What is the ZIP code of your employer/business address?",
+          "type": "text",
+          "showIf": { "q": "emp_same", "eq": "no" },
+          "map": [{ "text": "TEXT-A-1.8.1", "size": 9 }]
+        },
+        {
+          "id": "billing_pref",
+          "q": "Which address should Pru Life UK use for correspondence and billing?",
+          "type": "radio",
+          "required": true,
+          "options": [
+            { "value": "1", "label": "Present address" },
+            { "value": "2", "label": "Permanent address" },
+            { "value": "3", "label": "Employer/Business address" }
+          ],
+          "map": [{ "radio": "TICK-3" }]
+        },
+        {
+          "id": "reason_change",
+          "q": "What is the reason for your change in address?",
+          "help": "If the new address is the same as your servicing agent's address, please indicate your relationship with the agent and the reason for the request.",
+          "type": "textarea",
+          "required": true,
+          "map": [{ "text": "TEXT-A-1.9.0", "multiline": true, "size": 8 }]
+        }
+      ]
+    },
+    {
+      "id": "verification",
+      "title": "Policyowner Verification",
+      "intro": "I certify that the information provided in this form is true and correct. I consent to the use and processing of the above information in relation to my Policy/ies and authorize Pru Life UK to update my existing record to reflect the above information.",
+      "questions": [
+        {
+          "id": "executed_place",
+          "q": "Where are you completing this form? (city/municipality)",
+          "type": "text",
+          "required": true,
+          "map": [{ "text": "TEXT-C-1", "size": 9 }]
+        },
+        {
+          "id": "executed_date",
+          "q": "What is today's date?",
+          "type": "date",
+          "required": true,
+          "map": [{ "text": "TEXT-C-2", "format": "date_mdY", "size": 9 }]
+        },
+        {
+          "id": "po_signature",
+          "q": "Please sign as the Policyowner.",
+          "help": "Draw your signature. It will be placed over your printed name on the form.",
+          "type": "signature",
+          "required": true,
+          "map": [
+            {
+              "text": "TEXT-H-1.0.0",
+              "value": "{given_name} {middle_name} {surname}",
+              "size": 8
+            },
+            {
+              "image": { "page": 1, "rect": [48.1, 236.4, 271.3, 249.6], "grow": 3.2 }
+            }
+          ]
+        },
+        {
+          "id": "witness_name",
+          "q": "What is the full name of your witness?",
+          "help": "Optional — skip if there is no witness.",
+          "type": "text",
+          "map": [{ "text": "TEXT-H-1.0.1", "size": 8 }]
+        },
+        {
+          "id": "witness_signature",
+          "q": "Please ask the witness to sign.",
+          "type": "signature",
+          "showIf": { "q": "witness_name", "truthy": true },
+          "map": [
+            {
+              "image": { "page": 1, "rect": [329.6, 236.4, 552.8, 249.6], "grow": 3.2 }
+            }
+          ]
+        },
+        {
+          "id": "customary_signature",
+          "q": "Finally, draw your customary signature.",
+          "help": "This certifies the signature appearing on all your forms and valid IDs. It will be placed in the three specimen boxes.",
+          "type": "signature",
+          "required": true,
+          "map": [
+            { "image": { "page": 1, "rect": [234.7, 157.6, 330.1, 202.0] } },
+            { "image": { "page": 1, "rect": [344.0, 157.6, 439.4, 202.0] } },
+            { "image": { "page": 1, "rect": [453.4, 157.6, 548.8, 202.0] } }
+          ]
+        }
+      ]
+    }
+  ]
+}
