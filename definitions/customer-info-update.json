@@ -242,7 +242,7 @@
               "size": 8
             },
             {
-              "image": { "page": 1, "rect": [48.1, 236.4, 271.3, 249.6], "grow": 3.2 }
+              "image": { "page": 1, "rect": [48.1, 236.4, 271.3, 249.6], "grow": 2.2 }
             }
           ]
         },
@@ -260,19 +260,35 @@
           "showIf": { "q": "witness_name", "truthy": true },
           "map": [
             {
-              "image": { "page": 1, "rect": [329.6, 236.4, 552.8, 249.6], "grow": 3.2 }
+              "image": { "page": 1, "rect": [329.6, 236.4, 552.8, 249.6], "grow": 2.2 }
             }
           ]
         },
         {
-          "id": "customary_signature",
-          "q": "Finally, draw your customary signature.",
-          "help": "This certifies the signature appearing on all your forms and valid IDs. It will be placed in the three specimen boxes.",
+          "id": "customary_signature_1",
+          "q": "Customary signature — specimen 1 of 3.",
+          "help": "This certifies the signature appearing on all your forms and valid IDs. Draw it once for each of the three specimen boxes on the form.",
           "type": "signature",
           "required": true,
           "map": [
-            { "image": { "page": 1, "rect": [234.7, 157.6, 330.1, 202.0] } },
-            { "image": { "page": 1, "rect": [344.0, 157.6, 439.4, 202.0] } },
+            { "image": { "page": 1, "rect": [234.7, 157.6, 330.1, 202.0] } }
+          ]
+        },
+        {
+          "id": "customary_signature_2",
+          "q": "Customary signature — specimen 2 of 3.",
+          "type": "signature",
+          "required": true,
+          "map": [
+            { "image": { "page": 1, "rect": [344.0, 157.6, 439.4, 202.0] } }
+          ]
+        },
+        {
+          "id": "customary_signature_3",
+          "q": "Customary signature — specimen 3 of 3.",
+          "type": "signature",
+          "required": true,
+          "map": [
             { "image": { "page": 1, "rect": [453.4, 157.6, 548.8, 202.0] } }
           ]
         }

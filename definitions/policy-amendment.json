@@ -310,7 +310,7 @@
         {
           "id": "kyc_civil",
           "q": "What is your civil status?",
-          "type": "radio",
+          "type": "dropdown",
           "options": [
             {
               "value": "1",
@@ -790,7 +790,7 @@
         {
           "id": "li_civil",
           "q": "Life Insured's civil status?",
-          "type": "radio",
+          "type": "dropdown",
           "showIf": {
             "q": "sec2_gate",
             "eq": "yes"
@@ -4445,7 +4445,7 @@
                   275,
                   517
                 ],
-                "grow": 3
+                "grow": 2.2
               }
             }
           ]
@@ -4479,7 +4479,7 @@
                   545,
                   517
                 ],
-                "grow": 3
+                "grow": 2.2
               }
             }
           ]
@@ -4513,15 +4513,15 @@
                   275,
                   485
                 ],
-                "grow": 3
+                "grow": 2.2
               }
             }
           ]
         },
         {
-          "id": "po_customary",
-          "q": "Policyowner — draw your customary signature.",
-          "help": "This certifies that the signature appearing on all your forms and valid IDs is your customary signature. It is placed in the three specimen boxes.",
+          "id": "po_customary_1",
+          "q": "Policyowner customary signature — specimen 1 of 3.",
+          "help": "This certifies that the signature appearing on all your forms and valid IDs is your customary signature. Draw it once for each of the three specimen boxes.",
           "type": "signature",
           "required": true,
           "map": [
@@ -4535,7 +4535,15 @@
                   400
                 ]
               }
-            },
+            }
+          ]
+        },
+        {
+          "id": "po_customary_2",
+          "q": "Policyowner customary signature — specimen 2 of 3.",
+          "type": "signature",
+          "required": true,
+          "map": [
             {
               "image": {
                 "page": 5,
@@ -4546,7 +4554,15 @@
                   400
                 ]
               }
-            },
+            }
+          ]
+        },
+        {
+          "id": "po_customary_3",
+          "q": "Policyowner customary signature — specimen 3 of 3.",
+          "type": "signature",
+          "required": true,
+          "map": [
             {
               "image": {
                 "page": 5,
@@ -4607,8 +4623,7 @@
         },
         {
           "id": "irrev1_signature",
-          "q": "Irrevocable Beneficiary 1 — please sign.",
-          "help": "The signature is also placed in their customary-signature specimen boxes.",
+          "q": "Irrevocable Beneficiary 1 — please sign over the printed name.",
           "type": "signature",
           "required": true,
           "showIf": {
@@ -4625,9 +4640,21 @@
                   545,
                   486
                 ],
-                "grow": 3
+                "grow": 2.2
               }
-            },
+            }
+          ]
+        },
+        {
+          "id": "irrev1_customary_1",
+          "q": "Irrevocable Beneficiary 1 — customary signature, specimen 1 of 3.",
+          "type": "signature",
+          "required": true,
+          "showIf": {
+            "q": "irrev_applies",
+            "eq": "yes"
+          },
+          "map": [
             {
               "image": {
                 "page": 5,
@@ -4638,7 +4665,19 @@
                   320
                 ]
               }
-            },
+            }
+          ]
+        },
+        {
+          "id": "irrev1_customary_2",
+          "q": "Irrevocable Beneficiary 1 — customary signature, specimen 2 of 3.",
+          "type": "signature",
+          "required": true,
+          "showIf": {
+            "q": "irrev_applies",
+            "eq": "yes"
+          },
+          "map": [
             {
               "image": {
                 "page": 5,
@@ -4649,7 +4688,19 @@
                   320
                 ]
               }
-            },
+            }
+          ]
+        },
+        {
+          "id": "irrev1_customary_3",
+          "q": "Irrevocable Beneficiary 1 — customary signature, specimen 3 of 3.",
+          "type": "signature",
+          "required": true,
+          "showIf": {
+            "q": "irrev_applies",
+            "eq": "yes"
+          },
+          "map": [
             {
               "image": {
                 "page": 5,
@@ -4692,8 +4743,9 @@
         },
         {
           "id": "irrev2_signature",
-          "q": "Irrevocable Beneficiary 2 — please sign.",
+          "q": "Irrevocable Beneficiary 2 — please sign over the printed name.",
           "type": "signature",
+          "required": true,
           "showIf": {
             "q": "irrev2_name",
             "truthy": true
@@ -4708,9 +4760,21 @@
                   275,
                   452
                 ],
-                "grow": 3
+                "grow": 2.2
               }
-            },
+            }
+          ]
+        },
+        {
+          "id": "irrev2_customary_1",
+          "q": "Irrevocable Beneficiary 2 — customary signature, specimen 1 of 3.",
+          "type": "signature",
+          "required": true,
+          "showIf": {
+            "q": "irrev2_name",
+            "truthy": true
+          },
+          "map": [
             {
               "image": {
                 "page": 5,
@@ -4721,7 +4785,19 @@
                   260
                 ]
               }
-            },
+            }
+          ]
+        },
+        {
+          "id": "irrev2_customary_2",
+          "q": "Irrevocable Beneficiary 2 — customary signature, specimen 2 of 3.",
+          "type": "signature",
+          "required": true,
+          "showIf": {
+            "q": "irrev2_name",
+            "truthy": true
+          },
+          "map": [
             {
               "image": {
                 "page": 5,
@@ -4732,7 +4808,19 @@
                   260
                 ]
               }
-            },
+            }
+          ]
+        },
+        {
+          "id": "irrev2_customary_3",
+          "q": "Irrevocable Beneficiary 2 — customary signature, specimen 3 of 3.",
+          "type": "signature",
+          "required": true,
+          "showIf": {
+            "q": "irrev2_name",
+            "truthy": true
+          },
+          "map": [
             {
               "image": {
                 "page": 5,
@@ -4775,8 +4863,9 @@
         },
         {
           "id": "irrev3_signature",
-          "q": "Irrevocable Beneficiary 3 — please sign.",
+          "q": "Irrevocable Beneficiary 3 — please sign over the printed name.",
           "type": "signature",
+          "required": true,
           "showIf": {
             "q": "irrev3_name",
             "truthy": true
@@ -4791,9 +4880,21 @@
                   545,
                   451
                 ],
-                "grow": 3
+                "grow": 2.2
               }
-            },
+            }
+          ]
+        },
+        {
+          "id": "irrev3_customary_1",
+          "q": "Irrevocable Beneficiary 3 — customary signature, specimen 1 of 3.",
+          "type": "signature",
+          "required": true,
+          "showIf": {
+            "q": "irrev3_name",
+            "truthy": true
+          },
+          "map": [
             {
               "image": {
                 "page": 5,
@@ -4804,7 +4905,19 @@
                   204
                 ]
               }
-            },
+            }
+          ]
+        },
+        {
+          "id": "irrev3_customary_2",
+          "q": "Irrevocable Beneficiary 3 — customary signature, specimen 2 of 3.",
+          "type": "signature",
+          "required": true,
+          "showIf": {
+            "q": "irrev3_name",
+            "truthy": true
+          },
+          "map": [
             {
               "image": {
                 "page": 5,
@@ -4815,7 +4928,19 @@
                   204
                 ]
               }
-            },
+            }
+          ]
+        },
+        {
+          "id": "irrev3_customary_3",
+          "q": "Irrevocable Beneficiary 3 — customary signature, specimen 3 of 3.",
+          "type": "signature",
+          "required": true,
+          "showIf": {
+            "q": "irrev3_name",
+            "truthy": true
+          },
+          "map": [
             {
               "image": {
                 "page": 5,
