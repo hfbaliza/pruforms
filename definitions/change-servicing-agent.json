@@ -226,7 +226,7 @@
     },
     {
       "id": "agent_ack",
-      "title": "Agent & Branch Manager Signatures (optional)",
+      "title": "Agent & Branch Manager Signatures (admin)",
       "intro": "These signatures are usually collected by the branch. You may fill them in now if the people involved are with you, or leave them blank to be completed later.",
       "questions": [
         {
@@ -487,7 +487,8 @@
             }
           ]
         }
-      ]
+      ],
+      "admin": true
     }
   ]
 }

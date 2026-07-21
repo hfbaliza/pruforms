@@ -4452,8 +4452,9 @@
         },
         {
           "id": "witness_name",
-          "q": "Full name of your witness? (Skip if none.)",
+          "q": "Full name of the witness? (Skip if none.)",
           "type": "text",
+          "admin": true,
           "map": [
             {
               "text": "SIGNATURE-1.0.0.0.1",
@@ -4465,6 +4466,7 @@
           "id": "witness_signature",
           "q": "Witness — please sign.",
           "type": "signature",
+          "admin": true,
           "showIf": {
             "q": "witness_name",
             "truthy": true

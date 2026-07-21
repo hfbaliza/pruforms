@@ -1,6 +1,8 @@
 'use strict';
 
-/* ================= state ================= */
+/* ================= mode & state ================= */
+
+const IS_ADMIN = !!window.PRUFORMS_ADMIN;
 
 const app = document.getElementById('app');
 const topbarNote = document.getElementById('topbarNote');
@@ -15,7 +17,33 @@ const state = {
   pads: {},            // questionId -> SignaturePad
   pending: {},         // answers not yet flushed to the server
   flushTimer: null,
+  adminToken: localStorage.getItem('pruforms.adminToken') || null,
 };
+
+/* ---- client-side record of "my" sessions (this browser) ---- */
+
+function mySessionIds() {
+  try {
+    return JSON.parse(localStorage.getItem('pruforms.mySessions') || '[]');
+  } catch {
+    return [];
+  }
+}
+
+function rememberSession(id) {
+  const ids = mySessionIds();
+  if (!ids.includes(id)) {
+    ids.unshift(id);
+    localStorage.setItem('pruforms.mySessions', JSON.stringify(ids.slice(0, 50)));
+  }
+}
+
+function forgetSession(id) {
+  localStorage.setItem(
+    'pruforms.mySessions',
+    JSON.stringify(mySessionIds().filter((x) => x !== id))
+  );
+}
 
 /* ================= conditions (mirror of server logic) ================= */
 
@@ -36,31 +64,40 @@ function evalCondition(cond, answers) {
   return true;
 }
 
+function questionVisible(q, answers) {
+  if (q.admin && !IS_ADMIN) return false;
+  return evalCondition(q.showIf, answers);
+}
+
 function visibleSections() {
   const a = state.session.answers;
-  return state.def.sections.filter(
-    (s) => evalCondition(s.showIf, a) && s.questions.some((q) => evalCondition(q.showIf, a))
-  );
+  return state.def.sections.filter((s) => {
+    if (s.admin && !IS_ADMIN) return false;
+    return evalCondition(s.showIf, a) && s.questions.some((q) => questionVisible(q, a));
+  });
 }
 
 function visibleQuestionsOf(section) {
   const a = state.session.answers;
-  return section.questions.filter((q) => evalCondition(q.showIf, a));
+  return section.questions.filter((q) => questionVisible(q, a));
 }
 
 /* ================= api helpers ================= */
 
 async function api(path, opts = {}) {
-  const res = await fetch(path, {
-    headers: { 'Content-Type': 'application/json' },
-    ...opts,
-  });
+  const headers = { 'Content-Type': 'application/json' };
+  if (state.adminToken) headers['x-admin-token'] = state.adminToken;
+  const res = await fetch(path, { headers, ...opts });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+  if (!res.ok) {
+    const err = new Error(data.error || `Request failed (${res.status})`);
+    err.status = res.status;
+    throw err;
+  }
   return data;
 }
 
-/* ---- autosave: answers merge into state immediately, network flush is debounced ---- */
+/* ---- autosave ---- */
 
 function setAnswer(qid, value) {
   const empty = value === undefined || value === null || value === '' ||
@@ -89,8 +126,12 @@ async function flushAnswers() {
     });
     setSaveState('✓ All changes saved', true);
     return true;
-  } catch {
-    Object.assign(state.pending, batch); // retry next flush
+  } catch (err) {
+    if (err.status === 403) {
+      setSaveState('⚠ ' + err.message, false);
+      return false;
+    }
+    Object.assign(state.pending, batch);
     setSaveState('⚠ Could not save — check connection', false);
     return false;
   }
@@ -103,7 +144,7 @@ function setSaveState(text, ok) {
   });
 }
 
-/* ================= misc helpers ================= */
+/* ================= misc ================= */
 
 function esc(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({
@@ -135,29 +176,45 @@ function validate(q, value) {
   return null;
 }
 
-/* ================= home ================= */
+function statusBadge(status) {
+  const map = {
+    in_progress: ['In progress', 'badge-progress'],
+    submitted: ['Needs review', 'badge-submitted'],
+    reviewed: ['Reviewed', 'badge-reviewed'],
+    completed: ['Reviewed', 'badge-reviewed'],
+  };
+  const [label, cls] = map[status] || [status, 'badge-progress'];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+/* ================= client home ================= */
 
 async function showHome() {
+  if (IS_ADMIN) return showAdmin();
   topbarNote.textContent = '';
   state.def = null;
   state.session = null;
   state.previewOpen = false;
   app.classList.remove('wide');
   app.innerHTML = '<div class="loading">Loading…</div>';
-  const [forms, sessions] = await Promise.all([
+  const [forms, mine] = await Promise.all([
     api('/api/forms'),
-    api('/api/sessions').catch(() => []),
+    api('/api/sessions/lookup', {
+      method: 'POST',
+      body: JSON.stringify({ ids: mySessionIds() }),
+    }).catch(() => []),
   ]);
   state.forms = forms;
 
-  const inProgress = sessions.filter((s) => s.status === 'in_progress' && s.answered > 0);
-  const completed = sessions.filter((s) => s.status === 'completed');
+  const inProgress = mine.filter((s) => s.status === 'in_progress' && s.answered > 0);
+  const submitted = mine.filter((s) => s.status !== 'in_progress');
 
   app.innerHTML = `
     <div class="hero">
       <h1>What would you like to do today?</h1>
       <p>Pick a request below — you'll fill in a clean electronic version of the form,
-         page by page, and we'll produce the completed official PDF for you.</p>
+         page by page. When you submit, it is sent to our administrator for review,
+         and you can download a copy for your records.</p>
     </div>
     <div class="form-grid">
       ${forms.map((f) => `
@@ -182,19 +239,17 @@ async function showHome() {
       : '<div class="empty-note">Nothing in progress — your unfinished forms will appear here automatically.</div>'}
     </div>
 
-    <h2 class="subhead">Your completed documents</h2>
+    <h2 class="subhead">Your submitted forms</h2>
     <div class="session-list" id="doneList">
-      ${completed.length ? completed.map((s) => `
+      ${submitted.length ? submitted.map((s) => `
         <div class="session-item">
           <div class="meta">
-            <b>${esc(s.formTitle)}</b>
-            <span>completed ${new Date(s.updatedAt).toLocaleString()}</span>
+            <b>${esc(s.formTitle)}</b> ${statusBadge(s.status)}
+            <span>submitted ${s.submittedAt ? new Date(s.submittedAt).toLocaleString() : ''}</span>
           </div>
-          <a class="btn ghost small" href="/api/sessions/${esc(s.id)}/pdf?download=1">Download</a>
-          <button class="btn ghost small" data-print="${esc(s.id)}">Print</button>
-          <button class="btn ghost small" data-reopen="${esc(s.id)}">Open</button>
+          <a class="btn ghost small" href="/api/sessions/${esc(s.id)}/pdf?download=1">Download copy</a>
         </div>`).join('')
-      : '<div class="empty-note">Completed forms will be saved here for future access.</div>'}
+      : '<div class="empty-note">Forms you submit will be listed here, with a downloadable copy.</div>'}
     </div>
   `;
 
@@ -202,16 +257,13 @@ async function showHome() {
     el.addEventListener('click', () => startForm(el.dataset.form)));
   app.querySelectorAll('[data-resume]').forEach((el) =>
     el.addEventListener('click', () => resumeSession(el.dataset.resume)));
-  app.querySelectorAll('[data-reopen]').forEach((el) =>
-    el.addEventListener('click', () => resumeSession(el.dataset.reopen, true)));
   app.querySelectorAll('[data-discard]').forEach((el) =>
     el.addEventListener('click', async () => {
       if (!confirm('Discard this saved form and its answers?')) return;
       await api(`/api/sessions/${el.dataset.discard}`, { method: 'DELETE' });
+      forgetSession(el.dataset.discard);
       showHome();
     }));
-  app.querySelectorAll('[data-print]').forEach((el) =>
-    el.addEventListener('click', () => printPdf(el.dataset.print)));
 }
 
 async function startForm(formId) {
@@ -221,6 +273,7 @@ async function startForm(formId) {
     method: 'POST',
     body: JSON.stringify({ formId }),
   });
+  if (!IS_ADMIN) rememberSession(session.id);
   state.def = def;
   state.session = session;
   state.sectionIndex = 0;
@@ -230,20 +283,132 @@ async function startForm(formId) {
 }
 
 async function resumeSession(sessionId, toReview = false) {
-  app.innerHTML = '<div class="loading">Loading your saved answers…</div>';
+  app.innerHTML = '<div class="loading">Loading saved answers…</div>';
   const session = await api(`/api/sessions/${sessionId}`);
   const def = await api(`/api/forms/${session.formId}`);
   state.def = def;
   state.session = session;
   state.returnToReview = false;
   state.previewOpen = false;
+  if (!IS_ADMIN && session.status !== 'in_progress') {
+    // submitted forms are read-only for clients
+    return showHome();
+  }
   if (toReview) return showReview();
-  // resume at the first page containing an unanswered question
   const sections = visibleSections();
   let idx = sections.findIndex((s) =>
     visibleQuestionsOf(s).some((q) => isEmptyValue(session.answers[q.id])));
   state.sectionIndex = idx === -1 ? sections.length - 1 : idx;
   renderSection();
+}
+
+/* ================= admin views ================= */
+
+function showAdminLogin(message) {
+  topbarNote.textContent = 'Admin';
+  app.classList.remove('wide');
+  app.innerHTML = `
+    <div class="login-card">
+      <h2>Administrator sign-in</h2>
+      <p>Enter the admin password to review client submissions.</p>
+      <input type="password" id="adminPass" placeholder="Admin password" autocomplete="current-password">
+      <button class="btn primary" id="loginBtn">Sign in</button>
+      <div class="error-msg" id="loginMsg">${esc(message || '')}</div>
+    </div>
+  `;
+  const tryLogin = async () => {
+    const password = document.getElementById('adminPass').value;
+    const msg = document.getElementById('loginMsg');
+    try {
+      const { token } = await api('/api/admin/login', {
+        method: 'POST',
+        body: JSON.stringify({ password }),
+      });
+      state.adminToken = token;
+      localStorage.setItem('pruforms.adminToken', token);
+      showAdmin();
+    } catch (err) {
+      msg.textContent = err.message;
+    }
+  };
+  document.getElementById('loginBtn').addEventListener('click', tryLogin);
+  document.getElementById('adminPass').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') tryLogin();
+  });
+  setTimeout(() => document.getElementById('adminPass').focus(), 30);
+}
+
+async function showAdmin() {
+  if (!state.adminToken) return showAdminLogin();
+  topbarNote.textContent = 'Admin dashboard';
+  state.def = null;
+  state.session = null;
+  state.previewOpen = false;
+  app.classList.remove('wide');
+  app.innerHTML = '<div class="loading">Loading submissions…</div>';
+  let sessions;
+  try {
+    sessions = await api('/api/sessions');
+  } catch (err) {
+    if (err.status === 401) {
+      state.adminToken = null;
+      localStorage.removeItem('pruforms.adminToken');
+      return showAdminLogin('Session expired — please sign in again.');
+    }
+    throw err;
+  }
+
+  const needsReview = sessions.filter((s) => s.status === 'submitted');
+  const others = sessions.filter((s) => s.status !== 'submitted');
+
+  const row = (s) => `
+    <div class="session-item">
+      <div class="meta">
+        <b>${esc(s.formTitle)}</b> ${statusBadge(s.status)}
+        <span>${s.client ? esc(s.client) + ' · ' : ''}${s.answered} answers ·
+          ${s.submittedAt ? 'submitted ' + new Date(s.submittedAt).toLocaleString() : 'updated ' + new Date(s.updatedAt).toLocaleString()}</span>
+      </div>
+      <button class="btn primary small" data-open="${esc(s.id)}">
+        ${s.status === 'submitted' ? 'Review & edit' : 'Open'}
+      </button>
+      ${s.status !== 'in_progress'
+        ? `<a class="btn ghost small" href="/api/sessions/${esc(s.id)}/pdf?download=1">Download</a>`
+        : ''}
+      <button class="btn danger-ghost small" data-del="${esc(s.id)}">Delete</button>
+    </div>`;
+
+  app.innerHTML = `
+    <div class="hero">
+      <h1>Submissions</h1>
+      <p>Forms submitted by clients arrive here for review. Open one to edit any answer,
+         add witness signatures, and produce the final document.
+         <button class="btn ghost small" id="logoutBtn" style="float:right">Sign out</button></p>
+    </div>
+    <h2 class="subhead">Needs review ${needsReview.length ? `<span class="badge badge-submitted">${needsReview.length}</span>` : ''}</h2>
+    <div class="session-list">
+      ${needsReview.length ? needsReview.map(row).join('')
+        : '<div class="empty-note">No submissions waiting for review.</div>'}
+    </div>
+    <h2 class="subhead">Everything else</h2>
+    <div class="session-list">
+      ${others.length ? others.map(row).join('')
+        : '<div class="empty-note">Nothing here yet.</div>'}
+    </div>
+  `;
+
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    state.adminToken = null;
+    localStorage.removeItem('pruforms.adminToken');
+    showAdminLogin();
+  });
+  app.querySelectorAll('[data-open]').forEach((el) =>
+    el.addEventListener('click', () => resumeSession(el.dataset.open, true)));
+  app.querySelectorAll('[data-del]').forEach((el) =>
+    el.addEventListener('click', async () => {
+      if (!confirm('Delete this submission and its PDF permanently?')) return;
+      await api(`/api/sessions/${el.dataset.del}`, { method: 'DELETE' });
+      showAdmin();
+    }));
 }
 
 /* ================= section page (electronic form) ================= */
@@ -254,7 +419,7 @@ function renderSection(focusQid) {
   if (state.sectionIndex < 0) state.sectionIndex = 0;
   const section = sections[state.sectionIndex];
   const questions = visibleQuestionsOf(section);
-  topbarNote.textContent = state.def.title;
+  topbarNote.textContent = state.def.title + (IS_ADMIN ? ' — admin edit' : '');
   state.pads = {};
   app.classList.toggle('wide', state.previewOpen);
 
@@ -262,7 +427,7 @@ function renderSection(focusQid) {
 
   app.innerHTML = `
     <div class="form-toolbar">
-      <button class="btn ghost small" id="exitBtn" title="Leave this form">← All forms</button>
+      <button class="btn ghost small" id="exitBtn" title="Leave this form">← ${IS_ADMIN ? 'Dashboard' : 'All forms'}</button>
       <div class="toolbar-title">
         <b>${esc(state.def.title)}</b>
         <span>Page ${state.sectionIndex + 1} of ${sections.length + 1} — ${esc(section.title)}</span>
@@ -283,7 +448,7 @@ function renderSection(focusQid) {
     <div class="workspace ${state.previewOpen ? 'split' : ''}">
       <div class="form-col">
         <div class="page-card">
-          <h2 class="page-title">${esc(section.title)}</h2>
+          <h2 class="page-title">${esc(section.title)}${section.admin ? ' <span class="badge badge-submitted">admin only</span>' : ''}</h2>
           ${section.intro ? `<p class="section-intro">${esc(section.intro)}</p>` : ''}
           <div id="fields"></div>
           <div class="nav-row">
@@ -346,7 +511,6 @@ function renderSection(focusQid) {
   }
 }
 
-/** Read every text-like control on the page into state (radios etc. update on click). */
 function collectAllFieldValues() {
   document.querySelectorAll('#fields [data-field]').forEach((row) => {
     const qid = row.dataset.field;
@@ -369,7 +533,8 @@ function validateSection(section) {
   for (const q of visibleQuestionsOf(section)) {
     const row = document.querySelector(`[data-field="${CSS.escape(q.id)}"]`);
     if (!row) continue;
-    const err = validate(q, state.session.answers[q.id]);
+    // the admin may leave client-required questions as the client answered them
+    const err = IS_ADMIN ? null : validate(q, state.session.answers[q.id]);
     row.classList.toggle('error', !!err);
     row.querySelector('.field-error').textContent = err || '';
     if (err && !firstBad) firstBad = row;
@@ -379,7 +544,6 @@ function validateSection(section) {
   return ok;
 }
 
-/** A change to a gate-style answer can reveal/hide questions — re-render if so. */
 function maybeRerender(section) {
   const before = Array.from(document.querySelectorAll('#fields [data-field]'))
     .map((el) => el.dataset.field).join(',');
@@ -387,6 +551,7 @@ function maybeRerender(section) {
   if (before !== after) {
     collectAllFieldValues();
     renderSection();
+    return;
   }
   const sBefore = document.querySelectorAll('.step-dot').length;
   if (sBefore !== visibleSections().length) renderSection();
@@ -400,7 +565,8 @@ function buildField(q) {
   row.dataset.field = q.id;
   const label = document.createElement('label');
   label.className = 'field-label';
-  label.innerHTML = `${esc(q.q)}${q.required ? ' <span class="req">*</span>' : ''}`;
+  label.innerHTML = `${esc(q.q)}${q.required ? ' <span class="req">*</span>' : ''}` +
+    (q.admin ? ' <span class="badge badge-submitted">admin</span>' : '');
   row.appendChild(label);
   if (q.help) {
     const help = document.createElement('div');
@@ -545,14 +711,17 @@ function buildSignatureControl(control, q, existing) {
 /* ---------- exit ---------- */
 
 async function exitForm() {
+  if (!state.session) return showHome();
   collectAllFieldValues();
   await flushAnswers();
+  if (IS_ADMIN) return showAdmin();
   const answered = Object.keys(state.session.answers).length;
   if (answered === 0) {
-    // nothing entered — quietly discard the empty session
     await api(`/api/sessions/${state.session.id}`, { method: 'DELETE' }).catch(() => {});
+    forgetSession(state.session.id);
     return showHome();
   }
+  if (state.session.status !== 'in_progress') return showHome();
   const keep = confirm(
     'Keep your answers so you can continue later?\n\n' +
     'OK — save and go back to all forms\n' +
@@ -561,6 +730,7 @@ async function exitForm() {
   if (!keep) {
     if (!confirm('Really discard all answers for this form?')) return;
     await api(`/api/sessions/${state.session.id}`, { method: 'DELETE' }).catch(() => {});
+    forgetSession(state.session.id);
   }
   showHome();
 }
@@ -576,7 +746,7 @@ function previewPanelHtml() {
     <div class="preview-col">
       <div class="preview-head">
         <b>Document preview</b>
-        <span class="preview-note">Your answers, placed on the official form</span>
+        <span class="preview-note">Answers placed on the official form</span>
         <button class="btn ghost small" id="previewRefresh">⟳ Refresh</button>
       </div>
       <iframe class="preview-frame" id="previewFrame" title="PDF preview" src="${previewUrl()}"></iframe>
@@ -617,33 +787,42 @@ function displayValue(q, v) {
 
 async function showReview() {
   await flushAnswers();
-  topbarNote.textContent = `${state.def.title} — Review`;
+  topbarNote.textContent = `${state.def.title} — ${IS_ADMIN ? 'Admin review' : 'Review'}`;
   app.classList.add('wide');
   const sections = visibleSections();
   const answers = state.session.answers;
 
   const missingRequired = [];
-  for (const s of sections) {
-    for (const q of visibleQuestionsOf(s)) {
-      if (q.required && isEmptyValue(answers[q.id])) missingRequired.push(q);
+  if (!IS_ADMIN) {
+    for (const s of sections) {
+      for (const q of visibleQuestionsOf(s)) {
+        if (q.required && isEmptyValue(answers[q.id])) missingRequired.push(q);
+      }
     }
   }
 
+  const confirmLabel = IS_ADMIN
+    ? 'Finalize — generate reviewed PDF'
+    : 'Submit form for review';
+
   app.innerHTML = `
     <div class="form-toolbar">
-      <button class="btn ghost small" id="exitBtn">← All forms</button>
+      <button class="btn ghost small" id="exitBtn">← ${IS_ADMIN ? 'Dashboard' : 'All forms'}</button>
       <div class="toolbar-title">
         <b>${esc(state.def.title)}</b>
-        <span>Final review — check your answers against the document preview</span>
+        <span>${IS_ADMIN
+          ? 'Admin review — edit anything, add witness signatures, then finalize'
+          : 'Final review — check your answers against the document preview'}</span>
       </div>
       <div class="toolbar-actions"></div>
     </div>
     <div class="workspace split">
       <div class="form-col">
         <div class="review-head">
-          <h2>Review your answers</h2>
-          <p>The preview on the right shows your answers inserted into the official PDF.
-             Edit anything that isn't right, then confirm to generate the final document.</p>
+          <h2>${IS_ADMIN ? 'Review this submission' : 'Review your answers'}</h2>
+          <p>${IS_ADMIN
+            ? 'The preview shows the client’s answers on the official PDF. Use "Edit page" to change anything or to complete the witness/admin sections.'
+            : 'The preview on the right shows your answers inserted into the official PDF. When you submit, the form is sent to our administrator for review and locked for editing.'}</p>
         </div>
         ${sections.map((s, si) => `
           <div class="review-section">
@@ -664,7 +843,7 @@ async function showReview() {
           <button class="btn ghost" id="backToQ">← Back to the form</button>
           <div class="right">
             <button class="btn primary" id="confirmBtn" ${missingRequired.length ? 'disabled' : ''}>
-              Confirm & generate PDF
+              ${confirmLabel}
             </button>
           </div>
         </div>
@@ -680,7 +859,9 @@ async function showReview() {
   wirePreviewPanel();
   app.querySelectorAll('[data-edit]').forEach((el) =>
     el.addEventListener('click', () => {
+      const sections2 = visibleSections();
       state.sectionIndex = Number(el.dataset.sec);
+      if (state.sectionIndex >= sections2.length) state.sectionIndex = sections2.length - 1;
       state.returnToReview = true;
       state.previewOpen = false;
       renderSection(el.dataset.edit);
@@ -705,13 +886,14 @@ async function showReview() {
 async function generatePdf() {
   const btn = document.getElementById('confirmBtn');
   btn.disabled = true;
-  btn.textContent = 'Generating your PDF…';
+  btn.textContent = 'Generating the PDF…';
   try {
-    await api(`/api/sessions/${state.session.id}/generate`, { method: 'POST' });
+    const out = await api(`/api/sessions/${state.session.id}/generate`, { method: 'POST' });
+    state.session.status = out.status;
     showDone();
   } catch (err) {
     btn.disabled = false;
-    btn.textContent = 'Confirm & generate PDF';
+    btn.textContent = IS_ADMIN ? 'Finalize — generate reviewed PDF' : 'Submit form for review';
     alert(err.message);
   }
 }
@@ -737,44 +919,49 @@ function showDone() {
   app.classList.remove('wide');
   app.innerHTML = `
     <div class="done-card">
-      <div class="big">✅</div>
-      <h2>Your document is ready</h2>
-      <p>We filled the official <b>${esc(state.def.title)}</b> form with your answers and signatures.
-         It is saved here for future access.</p>
+      <div class="big">${IS_ADMIN ? '✅' : '📨'}</div>
+      <h2>${IS_ADMIN ? 'Submission finalized' : 'Your form has been submitted'}</h2>
+      <p>${IS_ADMIN
+        ? `The reviewed <b>${esc(state.def.title)}</b> PDF has been generated and saved.`
+        : `Thank you! Your <b>${esc(state.def.title)}</b> was sent to our administrator for review.
+           You can download a copy for your records below.`}</p>
       <div class="done-actions">
         <a class="btn primary" href="/api/sessions/${sid}/pdf?download=1">Download PDF</a>
         <button class="btn ghost" id="printBtn">Print</button>
-        <button class="btn ghost" id="emailBtn">Send by email</button>
-        <button class="btn ghost" id="homeBtn">Done</button>
+        ${IS_ADMIN ? '<button class="btn ghost" id="emailBtn">Send by email</button>' : ''}
+        <button class="btn ghost" id="homeBtn">${IS_ADMIN ? 'Back to dashboard' : 'Done'}</button>
       </div>
-      <div class="email-row" id="emailRow" style="display:none">
-        <input type="email" id="emailTo" placeholder="name@example.com">
-        <button class="btn primary" id="emailSend">Send</button>
-      </div>
-      <div class="error-msg" id="emailMsg" style="text-align:center"></div>
+      ${IS_ADMIN ? `
+        <div class="email-row" id="emailRow" style="display:none">
+          <input type="email" id="emailTo" placeholder="name@example.com">
+          <button class="btn primary" id="emailSend">Send</button>
+        </div>
+        <div class="error-msg" id="emailMsg" style="text-align:center"></div>` : ''}
       <iframe class="pdf-frame" src="/api/sessions/${sid}/pdf" title="Completed PDF preview"></iframe>
     </div>
   `;
   document.getElementById('printBtn').addEventListener('click', () => printPdf(sid));
-  document.getElementById('homeBtn').addEventListener('click', showHome);
-  document.getElementById('emailBtn').addEventListener('click', () => {
-    const row = document.getElementById('emailRow');
-    row.style.display = row.style.display === 'none' ? 'flex' : 'none';
-  });
-  document.getElementById('emailSend').addEventListener('click', async () => {
-    const to = document.getElementById('emailTo').value.trim();
-    const msg = document.getElementById('emailMsg');
-    msg.textContent = 'Sending…';
-    try {
-      await api(`/api/sessions/${sid}/email`, {
-        method: 'POST',
-        body: JSON.stringify({ to }),
-      });
-      msg.textContent = '✓ Sent!';
-    } catch (err) {
-      msg.textContent = err.message;
-    }
-  });
+  document.getElementById('homeBtn').addEventListener('click', () => (IS_ADMIN ? showAdmin() : showHome()));
+  if (IS_ADMIN) {
+    document.getElementById('emailBtn').addEventListener('click', () => {
+      const row = document.getElementById('emailRow');
+      row.style.display = row.style.display === 'none' ? 'flex' : 'none';
+    });
+    document.getElementById('emailSend').addEventListener('click', async () => {
+      const to = document.getElementById('emailTo').value.trim();
+      const msg = document.getElementById('emailMsg');
+      msg.textContent = 'Sending…';
+      try {
+        await api(`/api/sessions/${sid}/email`, {
+          method: 'POST',
+          body: JSON.stringify({ to }),
+        });
+        msg.textContent = '✓ Sent!';
+      } catch (err) {
+        msg.textContent = err.message;
+      }
+    });
+  }
 }
 
 /* ================= boot ================= */
