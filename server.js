@@ -144,6 +144,25 @@ app.post('/api/sessions/:id/generate', async (req, res) => {
   }
 });
 
+// Draft preview: fill the PDF with whatever is answered so far, without
+// validating required questions or marking the session complete.
+app.get('/api/sessions/:id/preview.pdf', async (req, res) => {
+  const session = loadSession(req, res);
+  if (!session) return;
+  const def = definitions[session.formId];
+  if (!def) return res.status(500).json({ error: 'Definition missing' });
+  try {
+    const { bytes } = await generatePdf(def, session.answers);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'inline; filename="preview.pdf"');
+    res.setHeader('Cache-Control', 'no-store');
+    res.send(bytes);
+  } catch (err) {
+    console.error('preview failed', err);
+    res.status(500).json({ error: `Preview failed: ${err.message}` });
+  }
+});
+
 app.get('/api/sessions/:id/pdf', (req, res) => {
   const session = loadSession(req, res);
   if (!session) return;
