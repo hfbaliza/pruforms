@@ -73,32 +73,52 @@ MAIL_FROM="Forms <forms@example.com>" npm start
   signature pad (Clear/Undo/Redraw), save/exit controls, review-and-edit
   step, and export actions (download, print, save, email).
 
-Sessions and generated PDFs live in `data/` (gitignored).
+## Storage
 
-## Deploying
+Sessions are the single source of truth; **PDFs are regenerated on demand**
+from the stored answers, so no binary/blob storage is needed. Storage is
+pluggable (`lib/store.js` selects the backend):
 
-This is a plain Node/Express server with file-based storage, so it needs a
-host with a **persistent process and disk**:
+- **No `SUPABASE_URL` set** → local file store under `data/` (gitignored) —
+  used for development.
+- **`SUPABASE_URL` set** → Supabase Postgres (`lib/store-supabase.js`) —
+  used in serverless / Vercel deployments.
 
-- **Render / Railway / Fly.io / any VPS** — works as-is (`npm start`), no
-  extra services needed. Attach a persistent volume for `data/`.
-- **Vercel** — not sufficient on its own: serverless functions have no
-  persistent filesystem, so sessions and PDFs would disappear between
-  requests. To run on Vercel you would pair it with an external store
-  (e.g. Supabase Postgres + Storage, or Vercel Postgres/Blob) and replace
-  `lib/store.js` — the storage API (`createSession`, `readSession`,
-  `writeSession`, `listSessions`, `deleteSession`, `outputPath`) is the only
-  seam that needs swapping.
+## Deploying to Vercel + Supabase
 
-Environment variables:
+**1. Supabase — create the table.** In your Supabase project: SQL Editor →
+New query → paste the contents of [`supabase/schema.sql`](supabase/schema.sql)
+→ Run. This creates a `sessions` table (RLS on, no public policies — the
+server uses the service-role key).
 
-| Variable | Purpose |
-|----------|---------|
-| `ADMIN_PASSWORD` | Password for `/admin` (required in production) |
-| `ADMIN_EMAIL` | Where new-submission notifications are sent |
-| `PUBLIC_URL` | Base URL used in notification links |
-| `SMTP_HOST/PORT/USER/PASS/SECURE`, `MAIL_FROM` | Email sending |
-| `PORT` | HTTP port (default 3000) |
+**2. Supabase — copy two values.** Project Settings → API:
+- **Project URL** → `SUPABASE_URL`
+- **`service_role` secret key** → `SUPABASE_SERVICE_ROLE_KEY` (keep secret,
+  never commit it or expose it to the browser)
+
+**3. Vercel — import the repo** (`hfbaliza/pruforms`). No build step is
+needed; `vercel.json` routes every request to the Express app in
+`api/index.js`.
+
+**4. Vercel — set Environment Variables** (Project → Settings → Environment
+Variables), then redeploy:
+
+| Variable | Required | Purpose |
+|----------|----------|---------|
+| `ADMIN_PASSWORD` | ✅ | Password for the `/admin` dashboard |
+| `SUPABASE_URL` | ✅ | Supabase project URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Supabase service-role key (server-side) |
+| `ADMIN_EMAIL` | – | Emailed when a client submits (needs SMTP) |
+| `PUBLIC_URL` | – | Base URL used in notification links |
+| `SMTP_HOST/PORT/USER/PASS/SECURE`, `MAIL_FROM` | – | Email sending |
+
+**5. Verify.** Open `https://your-app.vercel.app/api/health` — it should show
+`{"ok":true,"backend":"supabase",...}`. Then `/` is the client link to share
+and `/admin` is the reviewer dashboard.
+
+See [`.env.example`](.env.example) for the full list. Other persistent-disk
+hosts (Render, Railway, Fly.io, a VPS) also work — with no Supabase, they use
+the file store; set `SUPABASE_URL` to use Supabase there too.
 
 ## API overview
 
@@ -106,11 +126,18 @@ Environment variables:
 GET    /api/forms                    list forms
 GET    /api/forms/:id                full definition
 POST   /api/sessions {formId}        start an interview
-GET    /api/sessions                 list saved sessions
+GET    /api/sessions                 list all submissions (admin only)
+POST   /api/sessions/lookup {ids}     summaries for the client's own ids
 GET    /api/sessions/:id             load a session (resume)
-PUT    /api/sessions/:id/answers     autosave one answer {id, value}
-POST   /api/sessions/:id/generate    fill + flatten + sign → PDF
+PUT    /api/sessions/:id/answers     autosave answers (locked after submit)
+GET    /api/sessions/:id/preview.pdf draft PDF from current answers
+POST   /api/sessions/:id/generate    submit (client) / finalize (admin)
 GET    /api/sessions/:id/pdf         view/download the PDF (?download=1)
-POST   /api/sessions/:id/email {to}  email the PDF (needs SMTP env)
+POST   /api/sessions/:id/email {to}  email the PDF (admin, needs SMTP env)
 DELETE /api/sessions/:id             discard a session
+POST   /api/admin/login {password}   exchange password for the admin token
+GET    /api/health                   status + active storage backend
 ```
+
+Admin API calls require the `x-admin-token` header (the value of
+`ADMIN_PASSWORD`).
