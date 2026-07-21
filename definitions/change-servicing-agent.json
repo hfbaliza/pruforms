@@ -13,28 +13,48 @@
           "q": "What is your policy number? (If several, separate them with commas.)",
           "type": "text",
           "required": true,
-          "map": [{ "text": "Policy numbers Policyowners complete name Updated contact numbers Updated billing address1", "size": 9 }]
+          "map": [
+            {
+              "text": "Policy numbers Policyowners complete name Updated contact numbers Updated billing address1",
+              "size": 9
+            }
+          ]
         },
         {
           "id": "po_name",
           "q": "What is your complete name, as the Policyowner?",
           "type": "text",
           "required": true,
-          "map": [{ "text": "Policy numbers Policyowners complete name Updated contact numbers Updated billing address2", "size": 9 }]
+          "map": [
+            {
+              "text": "Policy numbers Policyowners complete name Updated contact numbers Updated billing address2",
+              "size": 9
+            }
+          ]
         },
         {
           "id": "contact_numbers",
           "q": "What is your updated contact number?",
           "type": "phone",
           "required": true,
-          "map": [{ "text": "Policy numbers Policyowners complete name Updated contact numbers Updated billing address3", "size": 9 }]
+          "map": [
+            {
+              "text": "Policy numbers Policyowners complete name Updated contact numbers Updated billing address3",
+              "size": 9
+            }
+          ]
         },
         {
           "id": "billing_address",
           "q": "What is your updated billing address?",
           "type": "textarea",
           "required": true,
-          "map": [{ "text": "Policy numbers Policyowners complete name Updated contact numbers Updated billing address4", "size": 8 }]
+          "map": [
+            {
+              "text": "Policy numbers Policyowners complete name Updated contact numbers Updated billing address4",
+              "size": 8
+            }
+          ]
         }
       ]
     },
@@ -58,7 +78,11 @@
             }
           ],
           "help": "An Active-to-Active transfer requires the consent signatures of your current servicing agent and branch manager at the bottom of the form.",
-          "map": [{ "radio": "fromt" }]
+          "map": [
+            {
+              "radio": "fromt"
+            }
+          ]
         }
       ]
     },
@@ -71,20 +95,35 @@
           "q": "What is the complete name of your new servicing agent?",
           "type": "text",
           "required": true,
-          "map": [{ "text": "Agents complete name Agent code Branch name1`", "size": 9 }]
+          "map": [
+            {
+              "text": "Agents complete name Agent code Branch name1`",
+              "size": 9
+            }
+          ]
         },
         {
           "id": "agent_code",
           "q": "What is the new agent's code?",
           "help": "Skip this if you do not know it.",
           "type": "text",
-          "map": [{ "text": "Agents complete name Agent code Branch name2", "size": 9 }]
+          "map": [
+            {
+              "text": "Agents complete name Agent code Branch name2",
+              "size": 9
+            }
+          ]
         },
         {
           "id": "branch_name",
           "q": "What is the new agent's branch name?",
           "type": "text",
-          "map": [{ "text": "Agents complete name Agent code Branch name3", "size": 9 }]
+          "map": [
+            {
+              "text": "Agents complete name Agent code Branch name3",
+              "size": 9
+            }
+          ]
         }
       ]
     },
@@ -99,19 +138,40 @@
           "type": "radio",
           "required": true,
           "options": [
-            { "value": "0", "label": "I want to consolidate all my policies with one servicing agent" },
-            { "value": "1", "label": "It is convenient for me to make transactions, I find it easy to contact the new agent, and I am comfortable discussing my policy needs" },
-            { "value": "2", "label": "Other reason" }
+            {
+              "value": "0",
+              "label": "I want to consolidate all my policies with one servicing agent"
+            },
+            {
+              "value": "1",
+              "label": "It is convenient for me to make transactions, I find it easy to contact the new agent, and I am comfortable discussing my policy needs"
+            },
+            {
+              "value": "2",
+              "label": "Other reason"
+            }
           ],
-          "map": [{ "radio": "fromti" }]
+          "map": [
+            {
+              "radio": "fromti"
+            }
+          ]
         },
         {
           "id": "reason_others",
           "q": "Please tell us your reason.",
           "type": "text",
           "required": true,
-          "showIf": { "q": "reason", "eq": "2" },
-          "map": [{ "text": "undefined", "size": 8 }]
+          "showIf": {
+            "q": "reason",
+            "eq": "2"
+          },
+          "map": [
+            {
+              "text": "undefined",
+              "size": 8
+            }
+          ]
         },
         {
           "id": "po_signature",
@@ -120,8 +180,23 @@
           "type": "signature",
           "required": true,
           "map": [
-            { "text": "undefinedsign", "value": "{po_name}", "size": 8 },
-            { "image": { "page": 1, "rect": [68.9, 249.2, 280.5, 264.3], "grow": 3.0 } }
+            {
+              "text": "undefinedsign",
+              "value": "{po_name}",
+              "size": 8
+            },
+            {
+              "image": {
+                "page": 1,
+                "rect": [
+                  68.9,
+                  249.2,
+                  280.5,
+                  264.3
+                ],
+                "grow": 2.2
+              }
+            }
           ]
         },
         {
@@ -130,9 +205,21 @@
           "type": "date",
           "required": true,
           "map": [
-            { "text": "undefinedmon", "format": "date_MM", "size": 8 },
-            { "text": "undefinedday", "format": "date_DD", "size": 8 },
-            { "text": "undefinedyear", "format": "date_YYYY", "size": 8 }
+            {
+              "text": "undefinedmon",
+              "format": "date_MM",
+              "size": 8
+            },
+            {
+              "text": "undefinedday",
+              "format": "date_DD",
+              "size": 8
+            },
+            {
+              "text": "undefinedyear",
+              "format": "date_YYYY",
+              "size": 8
+            }
           ]
         }
       ]
@@ -147,71 +234,163 @@
           "q": "Would you like to add the agent and branch manager signatures now?",
           "type": "radio",
           "options": [
-            { "value": "yes", "label": "Yes, add them now" },
-            { "value": "no", "label": "No, leave them blank" }
+            {
+              "value": "yes",
+              "label": "Yes, add them now"
+            },
+            {
+              "value": "no",
+              "label": "No, leave them blank"
+            }
           ],
           "map": []
         },
         {
           "id": "new_agent_signature",
-          "q": "New Servicing Agent — please sign.",
+          "q": "New Servicing Agent \u2014 please sign.",
           "type": "signature",
-          "showIf": { "q": "collect_agent_sigs", "eq": "yes" },
+          "showIf": {
+            "q": "collect_agent_sigs",
+            "eq": "yes"
+          },
           "map": [
-            { "text": "undefinedsignname", "value": "{agent_name}", "size": 7 },
-            { "image": { "page": 1, "rect": [68.9, 171.8, 226.6, 184.9], "grow": 2.6 } }
+            {
+              "text": "undefinedsignname",
+              "value": "{agent_name}",
+              "size": 7
+            },
+            {
+              "image": {
+                "page": 1,
+                "rect": [
+                  68.9,
+                  171.8,
+                  226.6,
+                  184.9
+                ],
+                "grow": 2.0
+              }
+            }
           ]
         },
         {
           "id": "new_agent_sign_date",
           "q": "Date of signing for the New Servicing Agent?",
           "type": "date",
-          "showIf": { "q": "collect_agent_sigs", "eq": "yes" },
-          "map": [{ "text": "undefinedsignnamedate1", "format": "date_mdY", "size": 7 }]
+          "showIf": {
+            "q": "collect_agent_sigs",
+            "eq": "yes"
+          },
+          "map": [
+            {
+              "text": "undefinedsignnamedate1",
+              "format": "date_mdY",
+              "size": 7
+            }
+          ]
         },
         {
           "id": "branch_mgr_name",
           "q": "What is the Branch Manager's full name?",
           "type": "text",
-          "showIf": { "q": "collect_agent_sigs", "eq": "yes" },
-          "map": [{ "text": "undefinedsignname2", "size": 7 }]
+          "showIf": {
+            "q": "collect_agent_sigs",
+            "eq": "yes"
+          },
+          "map": [
+            {
+              "text": "undefinedsignname2",
+              "size": 7
+            }
+          ]
         },
         {
           "id": "branch_mgr_signature",
-          "q": "Branch Manager — please sign.",
+          "q": "Branch Manager \u2014 please sign.",
           "type": "signature",
-          "showIf": { "q": "collect_agent_sigs", "eq": "yes" },
+          "showIf": {
+            "q": "collect_agent_sigs",
+            "eq": "yes"
+          },
           "map": [
-            { "image": { "page": 1, "rect": [68.9, 139.9, 226.6, 152.9], "grow": 2.6 } }
+            {
+              "image": {
+                "page": 1,
+                "rect": [
+                  68.9,
+                  139.9,
+                  226.6,
+                  152.9
+                ],
+                "grow": 2.0
+              }
+            }
           ]
         },
         {
           "id": "branch_mgr_sign_date",
           "q": "Date of signing for the Branch Manager?",
           "type": "date",
-          "showIf": { "q": "collect_agent_sigs", "eq": "yes" },
-          "map": [{ "text": "d2", "format": "date_mdY", "size": 7 }]
+          "showIf": {
+            "q": "collect_agent_sigs",
+            "eq": "yes"
+          },
+          "map": [
+            {
+              "text": "d2",
+              "format": "date_mdY",
+              "size": 7
+            }
+          ]
         },
         {
           "id": "current_agent_name",
           "q": "What is the Current Servicing Agent's full name? (Active-to-Active transfers only)",
           "type": "text",
           "showIf": [
-            { "q": "collect_agent_sigs", "eq": "yes" },
-            { "q": "tob_type", "eq": "NO" }
+            {
+              "q": "collect_agent_sigs",
+              "eq": "yes"
+            },
+            {
+              "q": "tob_type",
+              "eq": "NO"
+            }
           ],
-          "map": [{ "text": "undefinedsignname23", "size": 7 }]
+          "map": [
+            {
+              "text": "undefinedsignname23",
+              "size": 7
+            }
+          ]
         },
         {
           "id": "current_agent_signature",
-          "q": "Current Servicing Agent — please sign to consent to the transfer.",
+          "q": "Current Servicing Agent \u2014 please sign to consent to the transfer.",
           "type": "signature",
           "showIf": [
-            { "q": "collect_agent_sigs", "eq": "yes" },
-            { "q": "tob_type", "eq": "NO" }
+            {
+              "q": "collect_agent_sigs",
+              "eq": "yes"
+            },
+            {
+              "q": "tob_type",
+              "eq": "NO"
+            }
           ],
           "map": [
-            { "image": { "page": 1, "rect": [315.1, 171.8, 487.0, 184.9], "grow": 2.6 } }
+            {
+              "image": {
+                "page": 1,
+                "rect": [
+                  315.1,
+                  171.8,
+                  487.0,
+                  184.9
+                ],
+                "grow": 2.0
+              }
+            }
           ]
         },
         {
@@ -219,31 +398,71 @@
           "q": "Date of signing for the Current Servicing Agent?",
           "type": "date",
           "showIf": [
-            { "q": "collect_agent_sigs", "eq": "yes" },
-            { "q": "tob_type", "eq": "NO" }
+            {
+              "q": "collect_agent_sigs",
+              "eq": "yes"
+            },
+            {
+              "q": "tob_type",
+              "eq": "NO"
+            }
           ],
-          "map": [{ "text": "undefinedsignnamedate1fef", "format": "date_mdY", "size": 7 }]
+          "map": [
+            {
+              "text": "undefinedsignnamedate1fef",
+              "format": "date_mdY",
+              "size": 7
+            }
+          ]
         },
         {
           "id": "current_bm_name",
           "q": "What is the Current Branch Manager's full name? (Active-to-Active transfers only)",
           "type": "text",
           "showIf": [
-            { "q": "collect_agent_sigs", "eq": "yes" },
-            { "q": "tob_type", "eq": "NO" }
+            {
+              "q": "collect_agent_sigs",
+              "eq": "yes"
+            },
+            {
+              "q": "tob_type",
+              "eq": "NO"
+            }
           ],
-          "map": [{ "text": "undefinedsignname24", "size": 7 }]
+          "map": [
+            {
+              "text": "undefinedsignname24",
+              "size": 7
+            }
+          ]
         },
         {
           "id": "current_bm_signature",
-          "q": "Current Branch Manager — please sign to consent to the transfer.",
+          "q": "Current Branch Manager \u2014 please sign to consent to the transfer.",
           "type": "signature",
           "showIf": [
-            { "q": "collect_agent_sigs", "eq": "yes" },
-            { "q": "tob_type", "eq": "NO" }
+            {
+              "q": "collect_agent_sigs",
+              "eq": "yes"
+            },
+            {
+              "q": "tob_type",
+              "eq": "NO"
+            }
           ],
           "map": [
-            { "image": { "page": 1, "rect": [315.1, 139.9, 487.4, 152.9], "grow": 2.6 } }
+            {
+              "image": {
+                "page": 1,
+                "rect": [
+                  315.1,
+                  139.9,
+                  487.4,
+                  152.9
+                ],
+                "grow": 2.0
+              }
+            }
           ]
         },
         {
@@ -251,10 +470,22 @@
           "q": "Date of signing for the Current Branch Manager?",
           "type": "date",
           "showIf": [
-            { "q": "collect_agent_sigs", "eq": "yes" },
-            { "q": "tob_type", "eq": "NO" }
+            {
+              "q": "collect_agent_sigs",
+              "eq": "yes"
+            },
+            {
+              "q": "tob_type",
+              "eq": "NO"
+            }
           ],
-          "map": [{ "text": "d2ew", "format": "date_mdY", "size": 7 }]
+          "map": [
+            {
+              "text": "d2ew",
+              "format": "date_mdY",
+              "size": 7
+            }
+          ]
         }
       ]
     }
