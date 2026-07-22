@@ -257,6 +257,12 @@ textarea { min-height: 110px; resize: vertical; }
 .btn.small { padding: 8px 14px; font-size: 13.5px; }
 .btn.danger-ghost { background: #fff; color: var(--pru-red-dark); border: 1.6px solid #f2c4c8; }
 
+/* Save & Preview toolbar buttons — distinguished by colour, no icons */
+.btn.btn-save { background: #2f5aa8; color: #fff; }
+.btn.btn-save:hover { background: #244880; }
+.btn.btn-preview { background: #0f9d77; color: #fff; }
+.btn.btn-preview:hover { background: #0c7e5f; }
+
 .nav-row {
   display: flex;
   justify-content: space-between;

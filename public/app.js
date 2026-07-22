@@ -433,8 +433,8 @@ function renderSection(focusQid) {
         <span>Page ${state.sectionIndex + 1} of ${sections.length + 1} — ${esc(section.title)}</span>
       </div>
       <div class="toolbar-actions">
-        <button class="btn ghost small" id="saveBtn">💾 Save</button>
-        <button class="btn ghost small" id="previewBtn">${state.previewOpen ? '✕ Close preview' : '👁 Preview PDF'}</button>
+        <button class="btn small btn-save" id="saveBtn">Save</button>
+        <button class="btn small btn-preview" id="previewBtn">${state.previewOpen ? 'Close preview' : 'Preview PDF'}</button>
       </div>
     </div>
     <div class="progress-wrap">
