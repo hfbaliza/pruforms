@@ -187,11 +187,42 @@ function statusBadge(status) {
   return `<span class="badge ${cls}">${label}</span>`;
 }
 
+/* ================= icons & form metadata ================= */
+
+const ICONS = {
+  clipboard: '<path d="M9 2h6a1 1 0 0 1 1 1v1h1a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1V3a1 1 0 0 1 1-1Zm0 2v1h6V4H9Z"/>',
+  clock: '<path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 2a7 7 0 1 1 0 14 7 7 0 0 1 0-14Zm-.75 2.5v5l4 2.4.75-1.23-3.25-1.92V7.5h-1.5Z"/>',
+  check: '<path d="M9.55 17.6 4.4 12.45l1.4-1.4 3.75 3.75 8.65-8.65 1.4 1.4Z"/>',
+  search: '<path d="M10 4a6 6 0 0 1 4.6 9.85l5 5-1.4 1.4-5-5A6 6 0 1 1 10 4Zm0 2a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/>',
+  eye: '<path d="M12 5c-5 0-9 4.5-10 7 1 2.5 5 7 10 7s9-4.5 10-7c-1-2.5-5-7-10-7Zm0 2c3.6 0 6.8 3.1 7.8 5-1 1.9-4.2 5-7.8 5s-6.8-3.1-7.8-5C5.2 10.1 8.4 7 12 7Zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"/>',
+  person: '<path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0 2c-4.4 0-8 2.4-8 5.5V21h16v-1.5c0-3.1-3.6-5.5-8-5.5Z"/>',
+  users: '<path d="M8 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm-8 2c-3.3 0-6 1.8-6 4.2V20h9v-1.5c0-1.3.5-2.5 1.4-3.4A9.6 9.6 0 0 0 8 13Zm8 .5c-.9 0-1.7.1-2.4.4 1.5.9 2.4 2.3 2.4 3.9V20h6v-2.2c0-2.3-2.7-4.3-6-4.3Z"/>',
+  doc: '<path d="M7 2h7l5 5v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm6 2v4h4l-4-4ZM8 12h8v1.6H8V12Zm0 3.4h8V17H8v-1.6Z"/>',
+  refresh: '<path d="M12 5V2L8 6l4 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7Z"/>',
+};
+
+function icon(name, cls) {
+  return `<svg class="ico ${cls || ''}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name] || ''}</svg>`;
+}
+
+// Per-form card icon + estimated time.
+const FORM_META = {
+  'customer-info-update': { icon: 'person', time: '~3-5 mins' },
+  'change-servicing-agent': { icon: 'users', time: '~2-4 mins' },
+  'policy-amendment': { icon: 'doc', time: '~5-8 mins' },
+  'reinstatement': { icon: 'refresh', time: '~5-10 mins' },
+};
+
+function setTopNote(text) {
+  topbarNote.textContent = text || '';
+  topbarNote.classList.toggle('pill', !!text);
+}
+
 /* ================= client home ================= */
 
 async function showHome() {
   if (IS_ADMIN) return showAdmin();
-  topbarNote.textContent = '';
+  setTopNote('Client Self-Service Forms');
   state.def = null;
   state.session = null;
   state.previewOpen = false;
@@ -209,25 +240,50 @@ async function showHome() {
   const inProgress = mine.filter((s) => s.status === 'in_progress' && s.answered > 0);
   const submitted = mine.filter((s) => s.status !== 'in_progress');
 
+  const cardHtml = (f) => {
+    const meta = FORM_META[f.id] || { icon: 'doc', time: '~5 mins' };
+    return `
+      <div class="form-card" data-form="${esc(f.id)}"
+           data-search="${esc((f.title + ' ' + f.description).toLowerCase())}">
+        <div class="card-top">
+          <span class="card-icon">${icon(meta.icon)}</span>
+          <span class="details-btn">Details</span>
+        </div>
+        <h3>${esc(f.title)}</h3>
+        <p>${esc(f.description)}</p>
+        <div class="card-foot">
+          <span class="time">${icon('clock')} ${meta.time}</span>
+          <span class="start-link">Start Form →</span>
+        </div>
+      </div>`;
+  };
+
+  const emptyPanel = (title, sub) =>
+    `<div class="empty-panel"><b>${title}</b><span>${sub}</span></div>`;
+
   app.innerHTML = `
     <div class="hero">
-      <h1>What would you like to do today?</h1>
-      <p>Pick a request below — you'll fill in a clean electronic version of the form,
-         page by page. When you submit, it is sent to our administrator for review,
-         and you can download a copy for your records.</p>
-    </div>
-    <div class="form-grid">
-      ${forms.map((f) => `
-        <div class="form-card" data-form="${esc(f.id)}">
-          <h3>${esc(f.title)}</h3>
-          <p>${esc(f.description)}</p>
-          <span class="cta">Start →</span>
-        </div>`).join('')}
+      <span class="portal-badge">OFFICIAL POLICYHOLDER PORTAL</span>
+      <h1>Welcome to Pru Forms</h1>
+      <p>Fill out, review, and submit official Pru Life UK policy forms online.
+         Your answers save automatically, and you can download a signed copy for
+         your personal records.</p>
     </div>
 
-    <h2 class="subhead">Continue where you left off</h2>
-    <div class="session-list" id="resumeList">
-      ${inProgress.length ? inProgress.map((s) => `
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-tab="available">${icon('clipboard')} Available Forms <span class="tab-count">${forms.length}</span></button>
+      <button class="tab" data-tab="progress">${icon('clock')} In Progress${inProgress.length ? ` <span class="tab-count">${inProgress.length}</span>` : ''}</button>
+      <button class="tab" data-tab="submitted">${icon('check')} Submitted Forms${submitted.length ? ` <span class="tab-count">${submitted.length}</span>` : ''}</button>
+    </div>
+
+    <div class="tab-panel" data-panel="available">
+      <div class="searchbar">${icon('search')}<input id="formSearch" placeholder="Search forms (e.g. Policy Amendment, Reinstatement, Address Update)…"></div>
+      <div class="form-grid">${forms.map(cardHtml).join('')}</div>
+      <div class="no-results hidden" id="noResults">No forms match your search.</div>
+    </div>
+
+    <div class="tab-panel hidden" data-panel="progress">
+      ${inProgress.length ? `<div class="session-list">${inProgress.map((s) => `
         <div class="session-item">
           <div class="meta">
             <b>${esc(s.formTitle)}</b>
@@ -235,23 +291,44 @@ async function showHome() {
           </div>
           <button class="btn ghost small" data-resume="${esc(s.id)}">Continue</button>
           <button class="btn danger-ghost small" data-discard="${esc(s.id)}">Discard</button>
-        </div>`).join('')
-      : '<div class="empty-note">Nothing in progress — your unfinished forms will appear here automatically.</div>'}
+        </div>`).join('')}</div>`
+      : emptyPanel('No forms in progress', 'Your unfinished forms will appear here automatically.')}
     </div>
 
-    <h2 class="subhead">Your submitted forms</h2>
-    <div class="session-list" id="doneList">
-      ${submitted.length ? submitted.map((s) => `
+    <div class="tab-panel hidden" data-panel="submitted">
+      ${submitted.length ? `<div class="session-list">${submitted.map((s) => `
         <div class="session-item">
           <div class="meta">
             <b>${esc(s.formTitle)}</b> ${statusBadge(s.status)}
             <span>submitted ${s.submittedAt ? new Date(s.submittedAt).toLocaleString() : ''}</span>
           </div>
           <a class="btn ghost small" href="/api/sessions/${esc(s.id)}/pdf?download=1">Download copy</a>
-        </div>`).join('')
-      : '<div class="empty-note">Forms you submit will be listed here, with a downloadable copy.</div>'}
+        </div>`).join('')}</div>`
+      : emptyPanel('No submitted forms yet', 'Forms you submit will be listed here, with a downloadable copy.')}
     </div>
   `;
+
+  app.querySelectorAll('.tab').forEach((t) =>
+    t.addEventListener('click', () => {
+      app.querySelectorAll('.tab').forEach((x) => x.classList.remove('active'));
+      t.classList.add('active');
+      app.querySelectorAll('.tab-panel').forEach((p) =>
+        p.classList.toggle('hidden', p.dataset.panel !== t.dataset.tab));
+    }));
+
+  const search = document.getElementById('formSearch');
+  if (search) {
+    search.addEventListener('input', () => {
+      const q = search.value.trim().toLowerCase();
+      let shown = 0;
+      app.querySelectorAll('.form-card').forEach((c) => {
+        const match = c.dataset.search.includes(q);
+        c.style.display = match ? '' : 'none';
+        if (match) shown += 1;
+      });
+      document.getElementById('noResults').classList.toggle('hidden', shown > 0);
+    });
+  }
 
   app.querySelectorAll('.form-card').forEach((el) =>
     el.addEventListener('click', () => startForm(el.dataset.form)));
@@ -305,7 +382,7 @@ async function resumeSession(sessionId, toReview = false) {
 /* ================= admin views ================= */
 
 function showAdminLogin(message) {
-  topbarNote.textContent = 'Admin';
+  setTopNote('Admin sign-in');
   app.classList.remove('wide');
   app.innerHTML = `
     <div class="login-card">
@@ -340,7 +417,7 @@ function showAdminLogin(message) {
 
 async function showAdmin() {
   if (!state.adminToken) return showAdminLogin();
-  topbarNote.textContent = 'Admin dashboard';
+  setTopNote('Admin dashboard');
   state.def = null;
   state.session = null;
   state.previewOpen = false;
@@ -378,11 +455,14 @@ async function showAdmin() {
     </div>`;
 
   app.innerHTML = `
-    <div class="hero">
-      <h1>Submissions</h1>
-      <p>Forms submitted by clients arrive here for review. Open one to edit any answer,
-         add witness signatures, and produce the final document.
-         <button class="btn ghost small" id="logoutBtn" style="float:right">Sign out</button></p>
+    <div class="admin-head">
+      <div class="admin-head-text">
+        <span class="portal-badge">ADMIN CONSOLE</span>
+        <h1>Submissions</h1>
+        <p>Forms submitted by clients arrive here for review. Open one to edit any
+           answer, add witness signatures, and produce the final document.</p>
+      </div>
+      <button class="btn ghost small" id="logoutBtn">Sign out</button>
     </div>
     <h2 class="subhead">Needs review ${needsReview.length ? `<span class="badge badge-submitted">${needsReview.length}</span>` : ''}</h2>
     <div class="session-list">
@@ -419,29 +499,32 @@ function renderSection(focusQid) {
   if (state.sectionIndex < 0) state.sectionIndex = 0;
   const section = sections[state.sectionIndex];
   const questions = visibleQuestionsOf(section);
-  topbarNote.textContent = state.def.title + (IS_ADMIN ? ' — admin edit' : '');
+  setTopNote(state.def.title + (IS_ADMIN ? ' — admin edit' : ''));
   state.pads = {};
   app.classList.toggle('wide', state.previewOpen);
 
-  const pct = Math.round((state.sectionIndex / sections.length) * 100);
+  const pct = Math.round(((state.sectionIndex + 1) / sections.length) * 100);
+  const stepNums = sections.map((s, i) =>
+    `<span class="step-num ${i < state.sectionIndex ? 'done' : ''} ${i === state.sectionIndex ? 'current' : ''}" title="${esc(s.title)}">${i + 1}</span>`
+  ).join('');
 
   app.innerHTML = `
     <div class="form-toolbar">
-      <button class="btn ghost small" id="exitBtn" title="Leave this form">← ${IS_ADMIN ? 'Dashboard' : 'All forms'}</button>
+      <button class="btn ghost small" id="exitBtn" title="Leave this form">← ${IS_ADMIN ? 'Dashboard' : 'All Forms'}</button>
       <div class="toolbar-title">
         <b>${esc(state.def.title)}</b>
-        <span>Page ${state.sectionIndex + 1} of ${sections.length + 1} — ${esc(section.title)}</span>
+        <span>Step ${state.sectionIndex + 1} of ${sections.length} — ${esc(section.title)}</span>
       </div>
       <div class="toolbar-actions">
-        <button class="btn small btn-save" id="saveBtn">Save</button>
-        <button class="btn small btn-preview" id="previewBtn">${state.previewOpen ? 'Close preview' : 'Preview PDF'}</button>
+        <button class="btn small btn-preview" id="previewBtn">${icon('eye')} ${state.previewOpen ? 'Close' : 'Preview'}</button>
+        <button class="btn small btn-save" id="saveBtn">Save Draft</button>
       </div>
     </div>
-    <div class="progress-wrap">
+    <div class="progress-card">
       <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
       <div class="progress-label">
-        <span>${sections.map((s, i) => `<span class="step-dot ${i < state.sectionIndex ? 'done' : ''} ${i === state.sectionIndex ? 'current' : ''}" title="${esc(s.title)}"></span>`).join('')}</span>
-        <span>${pct}% complete</span>
+        <span class="steps">${stepNums}</span>
+        <span class="pct">${pct}% Complete</span>
       </div>
     </div>
 
@@ -470,10 +553,15 @@ function renderSection(focusQid) {
   for (const q of questions) fieldsEl.appendChild(buildField(q));
 
   document.getElementById('exitBtn').addEventListener('click', exitForm);
-  document.getElementById('saveBtn').addEventListener('click', async () => {
+  document.getElementById('saveBtn').addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
     collectAllFieldValues();
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
     const ok = await flushAnswers();
+    btn.textContent = ok ? 'Saved ✓' : 'Retry save';
     if (ok) setSaveState('✓ All changes saved', true);
+    setTimeout(() => { btn.disabled = false; btn.textContent = 'Save Draft'; }, 1600);
   });
   document.getElementById('previewBtn').addEventListener('click', async () => {
     collectAllFieldValues();
@@ -553,7 +641,7 @@ function maybeRerender(section) {
     renderSection();
     return;
   }
-  const sBefore = document.querySelectorAll('.step-dot').length;
+  const sBefore = document.querySelectorAll('.step-num').length;
   if (sBefore !== visibleSections().length) renderSection();
 }
 
@@ -787,7 +875,7 @@ function displayValue(q, v) {
 
 async function showReview() {
   await flushAnswers();
-  topbarNote.textContent = `${state.def.title} — ${IS_ADMIN ? 'Admin review' : 'Review'}`;
+  setTopNote(`${state.def.title} — ${IS_ADMIN ? 'Admin review' : 'Review'}`);
   app.classList.add('wide');
   const sections = visibleSections();
   const answers = state.session.answers;
@@ -915,7 +1003,7 @@ function printPdf(sessionId) {
 
 function showDone() {
   const sid = state.session.id;
-  topbarNote.textContent = state.def.title;
+  setTopNote(state.def.title);
   app.classList.remove('wide');
   app.innerHTML = `
     <div class="done-card">
