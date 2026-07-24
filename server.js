@@ -94,6 +94,30 @@ function clientLabel(session) {
   return name.trim();
 }
 
+function clientLastName(session) {
+  const a = session.answers || {};
+  const surname = a.surname || a.po_surname || a.li_surname;
+  if (surname) return String(surname).trim();
+  const label = clientLabel(session);
+  return label ? label.split(/\s+/).pop() : '';
+}
+
+function filenameSlug(text) {
+  return String(text || '')
+    .normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+// PDF file name: <client last name>-<form name>.pdf, falling back to the
+// session id when the client hasn't given a name yet.
+function pdfFileName(def, session) {
+  const lastName = filenameSlug(clientLastName(session));
+  const formName = filenameSlug(def ? def.title : session.formId);
+  const base = [lastName, formName].filter(Boolean).join('-');
+  return `${base || session.id.slice(0, 8)}.pdf`;
+}
+
 function summarize(session) {
   return {
     id: session.id,
@@ -307,7 +331,7 @@ app.get('/api/sessions/:id/pdf', wrap(async (req, res) => {
   const def = definitions[session.formId];
   if (!def) return res.status(500).json({ error: 'Definition missing' });
   const { bytes } = await generatePdf(def, session.answers);
-  const name = `${def.id}-${session.id.slice(0, 8)}.pdf`;
+  const name = pdfFileName(def, session);
   res.setHeader('Content-Type', 'application/pdf');
   const disposition = req.query.download === '1' ? 'attachment' : 'inline';
   res.setHeader('Content-Disposition', `${disposition}; filename="${name}"`);
@@ -340,7 +364,7 @@ app.post('/api/sessions/:id/email', wrap(async (req, res) => {
     subject: `Completed form: ${def ? def.title : session.formId}`,
     text: 'Please find the completed form attached.',
     attachments: [
-      { filename: `${session.formId}.pdf`, content: bytes, contentType: 'application/pdf' },
+      { filename: pdfFileName(def, session), content: bytes, contentType: 'application/pdf' },
     ],
   });
   res.json({ ok: true });
