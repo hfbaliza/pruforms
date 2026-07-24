@@ -481,7 +481,7 @@ textarea { min-height: 110px; resize: vertical; }
 .save-state.saved { color: var(--ok); }
 
 /* ---------- review ---------- */
-.review-head h2 { margin: 0 0 4px; }
+.review-head h2 { margin: 0 0 4px; font-size: 22px; }
 .review-head p { color: var(--muted); margin: 0 0 20px; }
 .review-section {
   background: var(--card);
@@ -521,7 +521,7 @@ textarea { min-height: 110px; resize: vertical; }
   text-align: center;
 }
 .done-card .big { font-size: 46px; }
-.done-card h2 { margin: 8px 0 6px; }
+.done-card h2 { margin: 8px 0 6px; font-size: 24px; }
 .done-card p { color: var(--muted); margin: 0 0 24px; }
 .done-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 
@@ -557,7 +557,7 @@ textarea { min-height: 110px; resize: vertical; }
   gap: 12px;
   text-align: center;
 }
-.login-card h2 { margin: 0; }
+.login-card h2 { margin: 0; font-size: 22px; }
 .login-card p { margin: 0; color: var(--muted); font-size: 13.5px; }
 
 /* ---------- section pages (electronic form) ---------- */
@@ -661,20 +661,22 @@ textarea { min-height: 110px; resize: vertical; }
    button/input keeps a real (~44px) touch target.
    ================================================================== */
 @media (max-width: 680px) {
-  main#app { padding: 14px 12px 44px; }
-  .footer { padding: 12px; font-size: 11.5px; }
+  main#app { padding: 10px 12px 32px; }
+  .footer { padding: 10px; font-size: 11px; }
 
-  .topbar { padding: 10px 12px; gap: 8px; }
-  .brand { gap: 8px; }
-  .brand-badge, .brand-word { font-size: 15px; }
-  .brand-divider { height: 18px; }
-  .brand-tick { width: 16px; height: 12px; }
-  .topbar-note.pill { font-size: 10.5px; padding: 5px 10px; letter-spacing: 0; }
+  .topbar { padding: 8px 12px; gap: 8px; }
+  .brand { gap: 7px; }
+  .brand-badge, .brand-word { font-size: 14px; }
+  .brand-divider { height: 16px; }
+  .brand-tick { width: 15px; height: 11px; }
+  /* the current page/form title is already shown below in the toolbar or
+     hero — this pill just duplicated it and wrapped to two lines */
+  .topbar-note { display: none; }
 
-  .hero { padding: 18px 16px; margin-bottom: 16px; }
-  .hero h1 { font-size: 21px; }
-  .hero p { font-size: 13.5px; }
-  .portal-badge { font-size: 10.5px; padding: 5px 12px; margin-bottom: 10px; }
+  .hero { padding: 13px 14px; margin-bottom: 12px; border-radius: 10px; }
+  .hero h1 { font-size: 17px; }
+  .hero p { font-size: 12px; line-height: 1.4; }
+  .portal-badge { font-size: 9px; padding: 4px 9px; margin-bottom: 7px; }
 
   /* flat underline tabs on mobile — slimmer than the desktop segmented pill */
   .tabs {
@@ -684,12 +686,12 @@ textarea { min-height: 110px; resize: vertical; }
     border-bottom: 1px solid var(--line);
     border-radius: 0;
     padding: 0;
-    margin: 0 0 16px;
+    margin: 0 0 12px;
     max-width: none;
   }
   .tab {
-    padding: 10px 4px;
-    font-size: 12.5px;
+    padding: 8px 4px;
+    font-size: 12px;
     border-radius: 0;
     border-bottom: 2px solid transparent;
     min-width: 0;
@@ -699,69 +701,101 @@ textarea { min-height: 110px; resize: vertical; }
   .tab-label { max-width: 100%; }
   .tab-label .full { display: none; }
   .tab-label .short { display: inline; }
-  .tab-count { font-size: 10px; padding: 1px 5px; }
+  .tab-count { font-size: 9.5px; padding: 1px 5px; }
 
-  .form-grid { grid-template-columns: 1fr; gap: 12px; }
-  .form-card { padding: 16px 16px 14px; }
+  .searchbar { padding: 9px 12px; margin-bottom: 12px; }
+  .searchbar input { font-size: 14px; }
 
-  .admin-head { flex-direction: column; align-items: stretch; padding: 18px 16px; gap: 12px; }
-  .admin-head h1 { font-size: 20px; }
+  .form-grid { grid-template-columns: 1fr; gap: 9px; }
+  .form-card { padding: 13px 13px 11px; gap: 7px; border-radius: 10px; }
+  .card-icon { width: 32px; height: 32px; border-radius: 8px; }
+  .card-icon .ico { width: 16px; height: 16px; }
+  .details-btn { padding: 4px 9px; font-size: 11.5px; }
+  .form-card h3 { font-size: 15px; margin-top: 2px; }
+  .form-card p { font-size: 12px; }
+  .card-foot { padding-top: 8px; }
+  .card-foot .time { font-size: 11px; }
+  .start-link { font-size: 12.5px; }
+
+  .admin-head { flex-direction: column; align-items: stretch; padding: 14px; gap: 10px; border-radius: 10px; }
+  .admin-head h1 { font-size: 18px; margin-bottom: 4px; }
+  .admin-head p { font-size: 12.5px; }
   .admin-head .btn { align-self: flex-start; }
 
-  .session-list { gap: 10px; }
-  .session-item { flex-direction: column; align-items: stretch; padding: 14px; gap: 10px; }
+  .session-list { gap: 8px; }
+  .session-item { flex-direction: column; align-items: stretch; padding: 11px 12px; gap: 8px; }
   .session-item .meta { min-width: 0; }
+  .session-item .meta b { font-size: 13.5px; }
+  .session-item .meta span { font-size: 11.5px; }
   .session-item .btn, .session-item a.btn { width: 100%; text-align: center; }
 
   /* form toolbar: back button, then title, then full-width action row */
-  .form-toolbar { padding: 12px 14px; gap: 0; }
+  .form-toolbar { padding: 9px 11px; gap: 0; border-radius: 10px; }
   #exitBtn { order: 1; }
-  .toolbar-title { order: 2; flex-basis: 100%; margin: 8px 0 2px; }
-  .toolbar-title b { font-size: 15px; }
-  .toolbar-title span { font-size: 12px; }
-  .toolbar-actions { order: 3; flex-basis: 100%; width: 100%; margin-top: 8px; }
+  .toolbar-title { order: 2; flex-basis: 100%; margin: 6px 0 2px; }
+  .toolbar-title b { font-size: 14px; }
+  .toolbar-title span { font-size: 11.5px; }
+  .toolbar-actions { order: 3; flex-basis: 100%; width: 100%; margin-top: 6px; gap: 8px; }
   .toolbar-actions .btn { flex: 1; justify-content: center; text-align: center; }
 
-  .progress-card { padding: 12px 14px; margin-bottom: 14px; }
-  .step-num { width: 22px; height: 22px; font-size: 11px; }
+  .progress-card { padding: 10px 12px; margin-bottom: 10px; border-radius: 10px; }
+  .step-num { width: 19px; height: 19px; font-size: 10px; }
   .steps { gap: 5px; }
-  .progress-label { font-size: 11.5px; }
+  .progress-label { font-size: 11px; margin-top: 8px; }
 
-  .qcard, .page-card { padding: 18px 14px; }
-  .page-title { font-size: 17px; }
-  .qcard h2 { font-size: 17px; }
-  .qcard .help { font-size: 13px; }
+  .qcard, .page-card { padding: 14px 12px; border-radius: 10px; }
+  .qcard .section-tag { font-size: 10px; padding: 3px 9px; margin-bottom: 10px; }
+  .qcard .section-intro { font-size: 11.5px; }
+  .page-title { font-size: 15.5px; padding-bottom: 6px; margin-bottom: 4px; }
+  .qcard h2 { font-size: 15.5px; margin-bottom: 5px; }
+  .qcard .help { font-size: 12px; margin-bottom: 12px; }
 
-  .field { margin: 14px 0; }
-  .field-label { font-size: 14px; }
-  .opt { padding: 12px 14px; font-size: 14px; }
-  .field .opt { padding: 11px 13px; font-size: 13.5px; }
+  .field { margin: 11px 0; }
+  .answer-area { margin: 12px 0 6px; }
+  .field-label { font-size: 13.5px; }
+  .field-help { font-size: 11.5px; }
+  input[type="text"], input[type="email"], input[type="tel"],
+  input[type="number"], input[type="date"], select, textarea { padding: 10px 12px; }
+  .opt { padding: 10px 12px; font-size: 13.5px; gap: 10px; }
+  .opt .dot { width: 16px; height: 16px; min-width: 16px; }
+  .field .opt { padding: 9px 11px; font-size: 13px; }
 
-  .sig-canvas { height: 160px; }
-  .sig-tools { gap: 10px; }
+  .sig-canvas { height: 140px; }
+  .sig-tools { gap: 8px; }
+  .sig-hint { font-size: 11.5px; }
+
+  .btn { padding: 11px 16px; font-size: 14px; }
 
   /* Back / Next stack full-width, primary action easiest to hit with a thumb */
-  .nav-row { flex-direction: column; gap: 10px; margin-top: 18px; }
+  .nav-row { flex-direction: column; gap: 8px; margin-top: 14px; }
   .nav-row .right { width: 100%; }
   .nav-row .btn { width: 100%; }
 
-  .preview-head { flex-wrap: wrap; row-gap: 6px; }
+  .preview-head { flex-wrap: wrap; row-gap: 6px; padding: 8px 12px; }
+  .preview-head b { font-size: 13px; }
   .preview-note { font-size: 11px; }
 
-  .review-head p { font-size: 13.5px; }
-  .review-section h3 { padding: 11px 14px; font-size: 13px; }
-  .review-row { flex-direction: column; align-items: flex-start; gap: 4px; padding: 12px 14px; }
+  .review-head h2 { font-size: 18px; }
+  .review-head p { font-size: 12.5px; margin-bottom: 14px; }
+  .review-section h3 { padding: 9px 12px; font-size: 12px; }
+  .review-row { flex-direction: column; align-items: flex-start; gap: 3px; padding: 10px 12px; }
+  .review-row .rq { font-size: 12px; }
+  .review-row .ra { font-size: 13px; }
 
-  .done-card { padding: 26px 18px; }
-  .done-card .big { font-size: 38px; }
+  .done-card { padding: 20px 16px; border-radius: 10px; }
+  .done-card .big { font-size: 32px; }
+  .done-card h2 { font-size: 19px; }
+  .done-card p { font-size: 12.5px; margin-bottom: 18px; }
   .done-actions { flex-direction: column; }
   .done-actions .btn { width: 100%; }
   .email-row { flex-direction: column; max-width: 100%; }
 
-  .login-card { margin: 30px 16px; padding: 26px 20px; }
+  .login-card { margin: 22px 16px; padding: 20px 18px; border-radius: 10px; }
+  .login-card h2 { font-size: 19px; }
+  .login-card p { font-size: 12.5px; }
 
   /* bigger touch targets for the small action buttons used throughout lists */
-  .btn.small { padding: 10px 16px; font-size: 14px; }
+  .btn.small { padding: 8px 14px; font-size: 13px; }
 }
 
 @media (max-width: 400px) {
