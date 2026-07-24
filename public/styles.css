@@ -267,6 +267,7 @@ main#app.wide { max-width: 1380px; }
 .admin-head h1 { margin: 0 0 6px; font-size: 26px; font-weight: 800; }
 .admin-head p { margin: 0; color: var(--muted); max-width: 720px; }
 .admin-head .btn { flex: none; }
+.admin-head-text { flex: 1; min-width: 0; }
 
 .session-list { display: flex; flex-direction: column; gap: 10px; }
 .session-item {
@@ -571,7 +572,7 @@ textarea { min-height: 110px; resize: vertical; }
   padding: 16px 20px;
   box-shadow: 0 4px 14px rgba(30, 30, 80, 0.04);
 }
-.toolbar-title { flex: 1; min-width: 200px; }
+.toolbar-title { flex: 1; min-width: 0; }
 .toolbar-title b { display: block; font-size: 17px; font-weight: 800; }
 .toolbar-title span { color: var(--muted); font-size: 13px; }
 .toolbar-actions { display: flex; gap: 10px; }
@@ -647,12 +648,112 @@ textarea { min-height: 110px; resize: vertical; }
 @media (max-width: 900px) {
   .workspace, .workspace.split { flex-direction: column; }
   .workspace.split .form-col { max-width: 100%; }
-  .preview-col { width: 100%; position: static; }
+  .preview-col { width: 100%; min-width: 0; position: static; }
   .preview-frame { height: 60vh; }
 }
 
-@media (max-width: 560px) {
-  .qcard, .page-card { padding: 22px 16px; }
-  .qcard h2 { font-size: 18px; }
-  .review-row { flex-direction: column; align-items: flex-start; gap: 4px; }
+/* ==================================================================
+   Mobile — phones & small tablets. Most clients answer forms here,
+   so this isn't a cosmetic afterthought: toolbars restack into full-
+   width tap targets, the tab strip becomes swipeable, and every
+   button/input keeps a real (~44px) touch target.
+   ================================================================== */
+@media (max-width: 680px) {
+  main#app { padding: 14px 12px 44px; }
+  .footer { padding: 12px; font-size: 11.5px; }
+
+  .topbar { padding: 10px 12px; gap: 8px; }
+  .brand { gap: 8px; }
+  .brand-badge, .brand-word { font-size: 15px; }
+  .brand-divider { height: 18px; }
+  .brand-tick { width: 16px; height: 12px; }
+  .topbar-note.pill { font-size: 10.5px; padding: 5px 10px; letter-spacing: 0; }
+
+  .hero { padding: 18px 16px; margin-bottom: 16px; }
+  .hero h1 { font-size: 21px; }
+  .hero p { font-size: 13.5px; }
+  .portal-badge { font-size: 10.5px; padding: 5px 12px; margin-bottom: 10px; }
+
+  /* segmented tabs become a swipeable strip instead of squeezing 3-up */
+  .tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    margin: 0 -12px 16px;
+    padding: 6px 12px;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    max-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { flex: 0 0 auto; white-space: nowrap; padding: 11px 16px; font-size: 13.5px; }
+
+  .form-grid { grid-template-columns: 1fr; gap: 12px; }
+  .form-card { padding: 16px 16px 14px; }
+
+  .admin-head { flex-direction: column; align-items: stretch; padding: 18px 16px; gap: 12px; }
+  .admin-head h1 { font-size: 20px; }
+  .admin-head .btn { align-self: flex-start; }
+
+  .session-list { gap: 10px; }
+  .session-item { flex-direction: column; align-items: stretch; padding: 14px; gap: 10px; }
+  .session-item .meta { min-width: 0; }
+  .session-item .btn, .session-item a.btn { width: 100%; text-align: center; }
+
+  /* form toolbar: back button, then title, then full-width action row */
+  .form-toolbar { padding: 12px 14px; gap: 0; }
+  #exitBtn { order: 1; }
+  .toolbar-title { order: 2; flex-basis: 100%; margin: 8px 0 2px; }
+  .toolbar-title b { font-size: 15px; }
+  .toolbar-title span { font-size: 12px; }
+  .toolbar-actions { order: 3; flex-basis: 100%; width: 100%; margin-top: 8px; }
+  .toolbar-actions .btn { flex: 1; justify-content: center; text-align: center; }
+
+  .progress-card { padding: 12px 14px; margin-bottom: 14px; }
+  .step-num { width: 22px; height: 22px; font-size: 11px; }
+  .steps { gap: 5px; }
+  .progress-label { font-size: 11.5px; }
+
+  .qcard, .page-card { padding: 18px 14px; }
+  .page-title { font-size: 17px; }
+  .qcard h2 { font-size: 17px; }
+  .qcard .help { font-size: 13px; }
+
+  .field { margin: 14px 0; }
+  .field-label { font-size: 14px; }
+  .opt { padding: 12px 14px; font-size: 14px; }
+  .field .opt { padding: 11px 13px; font-size: 13.5px; }
+
+  .sig-canvas { height: 160px; }
+  .sig-tools { gap: 10px; }
+
+  /* Back / Next stack full-width, primary action easiest to hit with a thumb */
+  .nav-row { flex-direction: column; gap: 10px; margin-top: 18px; }
+  .nav-row .right { width: 100%; }
+  .nav-row .btn { width: 100%; }
+
+  .preview-head { flex-wrap: wrap; row-gap: 6px; }
+  .preview-note { font-size: 11px; }
+
+  .review-head p { font-size: 13.5px; }
+  .review-section h3 { padding: 11px 14px; font-size: 13px; }
+  .review-row { flex-direction: column; align-items: flex-start; gap: 4px; padding: 12px 14px; }
+
+  .done-card { padding: 26px 18px; }
+  .done-card .big { font-size: 38px; }
+  .done-actions { flex-direction: column; }
+  .done-actions .btn { width: 100%; }
+  .email-row { flex-direction: column; max-width: 100%; }
+
+  .login-card { margin: 30px 16px; padding: 26px 20px; }
+
+  /* bigger touch targets for the small action buttons used throughout lists */
+  .btn.small { padding: 10px 16px; font-size: 14px; }
+}
+
+@media (max-width: 400px) {
+  /* the anniversary mark is the least essential brand element — drop it
+     before the actual company name has to shrink further */
+  .brand-badge, .brand-divider { display: none; }
 }

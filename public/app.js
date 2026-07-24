@@ -221,6 +221,7 @@ function setTopNote(text) {
 /* ================= client home ================= */
 
 async function showHome() {
+  window.scrollTo(0, 0);
   if (IS_ADMIN) return showAdmin();
   setTopNote('Client Self-Service Forms');
   state.def = null;
@@ -382,6 +383,7 @@ async function resumeSession(sessionId, toReview = false) {
 /* ================= admin views ================= */
 
 function showAdminLogin(message) {
+  window.scrollTo(0, 0);
   setTopNote('Admin sign-in');
   app.classList.remove('wide');
   app.innerHTML = `
@@ -416,6 +418,7 @@ function showAdminLogin(message) {
 }
 
 async function showAdmin() {
+  window.scrollTo(0, 0);
   if (!state.adminToken) return showAdminLogin();
   setTopNote('Admin dashboard');
   state.def = null;
@@ -494,6 +497,7 @@ async function showAdmin() {
 /* ================= section page (electronic form) ================= */
 
 function renderSection(focusQid) {
+  window.scrollTo(0, 0);
   const sections = visibleSections();
   if (state.sectionIndex >= sections.length) return showReview();
   if (state.sectionIndex < 0) state.sectionIndex = 0;
@@ -575,7 +579,6 @@ function renderSection(focusQid) {
     if (state.returnToReview) { state.returnToReview = false; return showReview(); }
     state.sectionIndex -= 1;
     renderSection();
-    window.scrollTo(0, 0);
   });
   document.getElementById('nextBtn').addEventListener('click', async () => {
     collectAllFieldValues();
@@ -584,7 +587,6 @@ function renderSection(focusQid) {
     if (state.returnToReview) { state.returnToReview = false; return showReview(); }
     state.sectionIndex += 1;
     renderSection();
-    window.scrollTo(0, 0);
   });
   if (state.previewOpen) wirePreviewPanel();
 
@@ -874,6 +876,7 @@ function displayValue(q, v) {
 }
 
 async function showReview() {
+  window.scrollTo(0, 0);
   await flushAnswers();
   setTopNote(`${state.def.title} — ${IS_ADMIN ? 'Admin review' : 'Review'}`);
   app.classList.add('wide');
@@ -1002,6 +1005,7 @@ function printPdf(sessionId) {
 }
 
 function showDone() {
+  window.scrollTo(0, 0);
   const sid = state.session.id;
   setTopNote(state.def.title);
   app.classList.remove('wide');
