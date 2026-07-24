@@ -45,6 +45,31 @@ function forgetSession(id) {
   );
 }
 
+function dismissedFormIds() {
+  try {
+    return JSON.parse(localStorage.getItem('pruforms.dismissedForms') || '[]');
+  } catch {
+    return [];
+  }
+}
+
+function rememberDismissedForm(id) {
+  const ids = dismissedFormIds().filter((x) => x !== id);
+  ids.unshift(id);
+  localStorage.setItem('pruforms.dismissedForms', JSON.stringify(ids.slice(0, 100)));
+}
+
+function clearDismissedForm(id) {
+  localStorage.setItem(
+    'pruforms.dismissedForms',
+    JSON.stringify(dismissedFormIds().filter((x) => x !== id))
+  );
+}
+
+function isDismissedForm(id) {
+  return dismissedFormIds().includes(id);
+}
+
 /* ================= conditions (mirror of server logic) ================= */
 
 function evalCondition(cond, answers) {
@@ -157,8 +182,13 @@ function isEmptyValue(v) {
     (Array.isArray(v) && v.length === 0);
 }
 
+function isQuestionRequired(q) {
+  return !!q.required && (state.def?.id || '') !== 'policy-amendment';
+}
+
 function validate(q, value) {
-  if (isEmptyValue(value)) return q.required ? 'This field is required.' : null;
+  const isRequired = isQuestionRequired(q);
+  if (isEmptyValue(value)) return isRequired ? 'This field is required.' : null;
   switch (q.type) {
     case 'email':
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Enter a valid email address.';
@@ -239,6 +269,7 @@ async function showHome() {
 
   const inProgress = mine.filter((s) => s.status === 'in_progress' && s.answered > 0);
   const submitted = mine.filter((s) => s.status !== 'in_progress');
+  const availableForms = forms.filter((f) => !isDismissedForm(f.id));
 
   const cardHtml = (f) => {
     const meta = FORM_META[f.id] || { icon: 'doc', time: '~5 mins' };
@@ -264,21 +295,21 @@ async function showHome() {
   app.innerHTML = `
     <div class="hero">
       <span class="portal-badge">OFFICIAL POLICYHOLDER PORTAL</span>
-      <h1>Welcome to Pru Forms</h1>
+      <h1>Welcome to Adrian's Pru Forms</h1>
       <p>Fill out, review, and submit official Pru Life UK policy forms online.
          Your answers save automatically, and you can download a signed copy for
          your personal records.</p>
     </div>
 
     <div class="tabs" role="tablist">
-      <button class="tab active" data-tab="available">${icon('clipboard')} Available Forms <span class="tab-count">${forms.length}</span></button>
+      <button class="tab active" data-tab="available">${icon('clipboard')} Available Forms <span class="tab-count">${availableForms.length}</span></button>
       <button class="tab" data-tab="progress">${icon('clock')} In Progress${inProgress.length ? ` <span class="tab-count">${inProgress.length}</span>` : ''}</button>
       <button class="tab" data-tab="submitted">${icon('check')} Submitted Forms${submitted.length ? ` <span class="tab-count">${submitted.length}</span>` : ''}</button>
     </div>
 
     <div class="tab-panel" data-panel="available">
       <div class="searchbar">${icon('search')}<input id="formSearch" placeholder="Search forms (e.g. Policy Amendment, Reinstatement, Address Update)…"></div>
-      <div class="form-grid">${forms.map(cardHtml).join('')}</div>
+      <div class="form-grid">${availableForms.map(cardHtml).join('')}</div>
       <div class="no-results hidden" id="noResults">No forms match your search.</div>
     </div>
 
@@ -290,7 +321,7 @@ async function showHome() {
             <span>${s.answered} answer${s.answered === 1 ? '' : 's'} saved · last updated ${new Date(s.updatedAt).toLocaleString()}</span>
           </div>
           <button class="btn ghost small" data-resume="${esc(s.id)}">Continue</button>
-          <button class="btn danger-ghost small" data-discard="${esc(s.id)}">Discard</button>
+          <button class="btn danger-ghost small" data-discard="${esc(s.id)}" data-form-id="${esc(s.formId)}">Discard</button>
         </div>`).join('')}</div>`
       : emptyPanel('No forms in progress', 'Your unfinished forms will appear here automatically.')}
     </div>
@@ -338,12 +369,14 @@ async function showHome() {
     el.addEventListener('click', async () => {
       if (!confirm('Discard this saved form and its answers?')) return;
       await api(`/api/sessions/${el.dataset.discard}`, { method: 'DELETE' });
+      rememberDismissedForm(el.dataset.formId || el.dataset.discard);
       forgetSession(el.dataset.discard);
       showHome();
     }));
 }
 
 async function startForm(formId) {
+  clearDismissedForm(formId);
   app.innerHTML = '<div class="loading">Preparing the form…</div>';
   const def = await api(`/api/forms/${formId}`);
   const session = await api('/api/sessions', {
@@ -653,7 +686,7 @@ function buildField(q) {
   row.dataset.field = q.id;
   const label = document.createElement('label');
   label.className = 'field-label';
-  label.innerHTML = `${esc(q.q)}${q.required ? ' <span class="req">*</span>' : ''}` +
+  label.innerHTML = `${esc(q.q)}${isQuestionRequired(q) ? ' <span class="req">*</span>' : ''}` +
     (q.admin ? ' <span class="badge badge-submitted">admin</span>' : '');
   row.appendChild(label);
   if (q.help) {
@@ -818,6 +851,7 @@ async function exitForm() {
   if (!keep) {
     if (!confirm('Really discard all answers for this form?')) return;
     await api(`/api/sessions/${state.session.id}`, { method: 'DELETE' }).catch(() => {});
+    if (state.session.status === 'in_progress') rememberDismissedForm(state.def?.id || state.session.formId || state.session.id);
     forgetSession(state.session.id);
   }
   showHome();
@@ -884,7 +918,7 @@ async function showReview() {
   if (!IS_ADMIN) {
     for (const s of sections) {
       for (const q of visibleQuestionsOf(s)) {
-        if (q.required && isEmptyValue(answers[q.id])) missingRequired.push(q);
+        if (isQuestionRequired(q) && isEmptyValue(answers[q.id])) missingRequired.push(q);
       }
     }
   }

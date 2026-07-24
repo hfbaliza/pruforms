@@ -272,7 +272,7 @@ app.post('/api/sessions/:id/generate', wrap(async (req, res) => {
   // the admin finalizes at their own discretion.
   if (!admin) {
     const missing = visibleQuestions(def, session.answers, false)
-      .filter(({ question }) => question.required)
+      .filter(({ question }) => question.required && def.id !== 'policy-amendment')
       .filter(({ question }) => {
         const v = session.answers[question.id];
         return v === undefined || v === null || v === '' ||
