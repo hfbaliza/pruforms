@@ -676,17 +676,27 @@ textarea { min-height: 110px; resize: vertical; }
   .hero p { font-size: 13.5px; }
   .portal-badge { font-size: 10.5px; padding: 5px 12px; margin-bottom: 10px; }
 
-  /* segmented tabs stay 3-up and in view — stack icon over label instead of scrolling */
-  .tabs { gap: 4px; padding: 5px; margin: 0 0 16px; max-width: none; }
+  /* flat underline tabs on mobile — slimmer than the desktop segmented pill */
+  .tabs {
+    gap: 0;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
+    padding: 0;
+    margin: 0 0 16px;
+    max-width: none;
+  }
   .tab {
-    flex-direction: column;
-    gap: 3px;
-    padding: 8px 4px 7px;
-    font-size: 11px;
+    padding: 10px 4px;
+    font-size: 12.5px;
+    border-radius: 0;
+    border-bottom: 2px solid transparent;
     min-width: 0;
   }
-  .tab .ico { width: 16px; height: 16px; }
-  .tab-label { display: flex; align-items: center; gap: 4px; max-width: 100%; }
+  .tab .ico { display: none; }
+  .tab.active { box-shadow: none; border-bottom-color: var(--pru-red); }
+  .tab-label { max-width: 100%; }
   .tab-label .full { display: none; }
   .tab-label .short { display: inline; }
   .tab-count { font-size: 10px; padding: 1px 5px; }
