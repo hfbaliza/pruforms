@@ -152,6 +152,8 @@ main#app.wide { max-width: 1380px; }
 }
 .tab:hover { color: var(--ink); }
 .tab.active { background: #fff; color: var(--ink); box-shadow: 0 2px 8px rgba(30, 30, 80, 0.08); }
+.tab-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tab-label .short { display: none; }
 .tab-count {
   background: #fdeaec;
   color: var(--pru-red-dark);
@@ -674,20 +676,20 @@ textarea { min-height: 110px; resize: vertical; }
   .hero p { font-size: 13.5px; }
   .portal-badge { font-size: 10.5px; padding: 5px 12px; margin-bottom: 10px; }
 
-  /* segmented tabs become a swipeable strip instead of squeezing 3-up */
-  .tabs {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    margin: 0 -12px 16px;
-    padding: 6px 12px;
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
-    max-width: none;
+  /* segmented tabs stay 3-up and in view — stack icon over label instead of scrolling */
+  .tabs { gap: 4px; padding: 5px; margin: 0 0 16px; max-width: none; }
+  .tab {
+    flex-direction: column;
+    gap: 3px;
+    padding: 8px 4px 7px;
+    font-size: 11px;
+    min-width: 0;
   }
-  .tabs::-webkit-scrollbar { display: none; }
-  .tab { flex: 0 0 auto; white-space: nowrap; padding: 11px 16px; font-size: 13.5px; }
+  .tab .ico { width: 16px; height: 16px; }
+  .tab-label { display: flex; align-items: center; gap: 4px; max-width: 100%; }
+  .tab-label .full { display: none; }
+  .tab-label .short { display: inline; }
+  .tab-count { font-size: 10px; padding: 1px 5px; }
 
   .form-grid { grid-template-columns: 1fr; gap: 12px; }
   .form-card { padding: 16px 16px 14px; }

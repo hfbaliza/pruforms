@@ -303,9 +303,9 @@ async function showHome() {
     </div>
 
     <div class="tabs" role="tablist">
-      <button class="tab active" data-tab="available">${icon('clipboard')} Available Forms <span class="tab-count">${availableForms.length}</span></button>
-      <button class="tab" data-tab="progress">${icon('clock')} In Progress${inProgress.length ? ` <span class="tab-count">${inProgress.length}</span>` : ''}</button>
-      <button class="tab" data-tab="submitted">${icon('check')} Submitted Forms${submitted.length ? ` <span class="tab-count">${submitted.length}</span>` : ''}</button>
+      <button class="tab active" data-tab="available">${icon('clipboard')}<span class="tab-label"><span class="full">Available Forms</span><span class="short">Available</span></span><span class="tab-count">${availableForms.length}</span></button>
+      <button class="tab" data-tab="progress">${icon('clock')}<span class="tab-label">In Progress</span>${inProgress.length ? ` <span class="tab-count">${inProgress.length}</span>` : ''}</button>
+      <button class="tab" data-tab="submitted">${icon('check')}<span class="tab-label"><span class="full">Submitted Forms</span><span class="short">Submitted</span></span>${submitted.length ? ` <span class="tab-count">${submitted.length}</span>` : ''}</button>
     </div>
 
     <div class="tab-panel" data-panel="available">
