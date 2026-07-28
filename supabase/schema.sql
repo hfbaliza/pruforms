@@ -31,18 +31,26 @@ create table if not exists public.sessions (
   reviewed_at  timestamptz
 );
 
+-- Belt-and-suspenders for an existing `sessions` table from before agents
+-- existed: `create table if not exists` above is a no-op on a table that's
+-- already there, so it wouldn't add this column on its own.
+alter table public.sessions add column if not exists agent_id uuid references public.agents (id) on delete set null;
+
 create index if not exists sessions_status_idx   on public.sessions (status);
 create index if not exists sessions_updated_idx  on public.sessions (updated_at desc);
 create index if not exists sessions_agent_idx    on public.sessions (agent_id);
-
--- Migrating an existing deployment? Run just this if the tables above
--- already exist without the agent columns:
---   create table if not exists public.agents ( ... as above ... );
---   alter table public.sessions add column if not exists agent_id uuid references public.agents (id) on delete set null;
---   create index if not exists sessions_agent_idx on public.sessions (agent_id);
 
 -- RLS on, no policies: only the service-role key (used server-side) can read
 -- or write. Do NOT add public policies unless you know you want direct client
 -- access — the Node server is the only intended writer.
 alter table public.sessions enable row level security;
 alter table public.agents enable row level security;
+
+-- ---------------------------------------------------------------------
+-- Already have a `sessions` table from before agents existed? This whole
+-- script is safe to paste and run again as-is — every statement is
+-- if-not-exists / idempotent, so it only adds the new `agents` table and
+-- `sessions.agent_id` column, without touching or deleting existing rows.
+-- Pre-existing sessions get agent_id = null (unassigned to any agent)
+-- until re-tagged, or a client resubmits through an agent's link.
+-- ---------------------------------------------------------------------
