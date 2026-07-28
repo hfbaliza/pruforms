@@ -1,42 +1,46 @@
 'use strict';
 
 const express = require('express');
-const crypto = require('crypto');
-const fs = require('fs');
 const path = require('path');
 
 const store = require('./lib/store');
 const { generatePdf } = require('./lib/pdf-filler');
 const { visibleQuestions } = require('./lib/conditions');
+const { GOOGLE_CLIENT_ID, verifyGoogleIdToken, signAgentToken, verifyAgentToken } = require('./lib/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ---------- admin auth ----------
-// The admin area is protected by a shared password (set ADMIN_PASSWORD in the
-// environment). Clients never need it; only /admin and admin API calls do.
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'pruforms-admin';
-if (!process.env.ADMIN_PASSWORD) {
+// ---------- agent auth ----------
+// Each admin is an "agent" who signs in with their own Google account
+// (see lib/auth.js). There is no shared admin password and no company-wide
+// view — every agent only ever sees sessions tagged with their own agent id.
+if (!process.env.GOOGLE_CLIENT_ID) {
   console.warn(
-    'WARNING: ADMIN_PASSWORD not set — using the default "pruforms-admin". ' +
-    'Set ADMIN_PASSWORD before sharing the link with clients.'
+    'WARNING: GOOGLE_CLIENT_ID not set — agent sign-in will not work until ' +
+    'it is configured. See README for how to create one.'
   );
 }
 
-function timingSafeEqual(a, b) {
-  const ba = Buffer.from(String(a));
-  const bb = Buffer.from(String(b));
-  if (ba.length !== bb.length) return false;
-  return crypto.timingSafeEqual(ba, bb);
+// Decodes the caller's agent session token (if any); does not reject the
+// request when absent — routes that need to distinguish "the owning agent"
+// from "anyone with the session's unguessable id" (the client's own
+// in-progress draft) use this instead of a hard requirement.
+function agentFromReq(req) {
+  const header = req.get('authorization') || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : '';
+  return verifyAgentToken(token);
 }
 
-function isAdmin(req) {
-  const token = req.get('x-admin-token') || '';
-  return timingSafeEqual(token, ADMIN_PASSWORD);
+function isSessionOwner(req, session) {
+  const agent = agentFromReq(req);
+  return !!agent && !!session.agentId && agent.agentId === session.agentId;
 }
 
-function requireAdmin(req, res, next) {
-  if (!isAdmin(req)) return res.status(401).json({ error: 'Admin access required' });
+function requireAgent(req, res, next) {
+  const agent = agentFromReq(req);
+  if (!agent) return res.status(401).json({ error: 'Sign in required' });
+  req.agent = agent;
   next();
 }
 
@@ -54,6 +58,12 @@ app.get('/admin', (req, res) =>
 
 app.get('/api/health', (req, res) =>
   res.json({ ok: true, backend: store.backend, forms: Object.keys(definitions).length }));
+
+// Public, non-secret config the client needs before it can render anything
+// that talks to Google (the OAuth client id is meant to be public).
+app.get('/api/config', (req, res) => {
+  res.json({ googleClientId: GOOGLE_CLIENT_ID });
+});
 
 // ---------- form definitions ----------
 
@@ -133,18 +143,55 @@ function summarize(session) {
   };
 }
 
+// ---------- agents (servicing agents / admins) ----------
+
+// Public directory used by the client-side "select your agent" picker —
+// only the fields needed to pick someone by name are exposed.
+app.get('/api/agents', wrap(async (req, res) => {
+  const agents = await store.listAgents();
+  res.json(agents.map((a) => ({ id: a.id, code: a.code, name: a.name })));
+}));
+
+// Resolves an agent's personal link code (pruforms.example.com/?a=<code>).
+app.get('/api/agents/by-code/:code', wrap(async (req, res) => {
+  const agent = await store.findAgentByCode(req.params.code);
+  if (!agent) return res.status(404).json({ error: 'Unknown agent link' });
+  res.json({ id: agent.id, code: agent.code, name: agent.name });
+}));
+
+app.post('/api/auth/google', wrap(async (req, res) => {
+  const { idToken } = req.body || {};
+  if (!idToken) return res.status(400).json({ error: 'Missing idToken' });
+  let payload;
+  try {
+    payload = await verifyGoogleIdToken(idToken);
+  } catch (err) {
+    return res.status(401).json({ error: err.message || 'Google sign-in failed' });
+  }
+  let agent = await store.findAgentByGoogleSub(payload.sub);
+  if (!agent) {
+    agent = await store.createAgent({ googleSub: payload.sub, email: payload.email, name: payload.name });
+  }
+  const token = signAgentToken(agent);
+  res.json({ token, agent: { id: agent.id, code: agent.code, name: agent.name, email: agent.email } });
+}));
+
 // ---------- sessions ----------
 
 app.post('/api/sessions', wrap(async (req, res) => {
-  const { formId } = req.body || {};
+  const { formId, agentId } = req.body || {};
   if (!definitions[formId]) return res.status(400).json({ error: 'Unknown form' });
-  const session = await store.createSession(formId);
+  if (!agentId) return res.status(400).json({ error: 'Select your agent before starting a form' });
+  const agent = await store.findAgentById(agentId);
+  if (!agent) return res.status(400).json({ error: 'Unknown agent' });
+  const session = await store.createSession(formId, agent.id);
   res.json(session);
 }));
 
-// Admin: the full submission list.
-app.get('/api/sessions', requireAdmin, wrap(async (req, res) => {
-  const sessions = await store.listSessions();
+// Agent: the submission list for *their own* clients only — every other
+// agent's submissions are invisible, there is no company-wide view.
+app.get('/api/sessions', requireAgent, wrap(async (req, res) => {
+  const sessions = await store.listSessions({ agentId: req.agent.agentId });
   res.json(sessions.map(summarize));
 }));
 
@@ -185,8 +232,8 @@ app.get('/api/sessions/:id', wrap(async (req, res) => {
 app.put('/api/sessions/:id/answers', wrap(async (req, res) => {
   const session = await loadSession(req, res);
   if (!session) return;
-  // Once submitted, only the admin may change answers.
-  if (session.status !== 'in_progress' && !isAdmin(req)) {
+  // Once submitted, only the owning agent may change answers.
+  if (session.status !== 'in_progress' && !isSessionOwner(req, session)) {
     return res.status(403).json({
       error: 'This form has been submitted for review and can no longer be edited.',
     });
@@ -217,8 +264,8 @@ app.delete('/api/sessions/:id', wrap(async (req, res) => {
   } catch {
     return res.status(400).json({ error: 'Invalid id' });
   }
-  if (session && session.status !== 'in_progress' && !isAdmin(req)) {
-    return res.status(403).json({ error: 'Submitted forms can only be removed by the admin.' });
+  if (session && session.status !== 'in_progress' && !isSessionOwner(req, session)) {
+    return res.status(403).json({ error: 'Submitted forms can only be removed by the owning agent.' });
   }
   try {
     await store.deleteSession(req.params.id);
@@ -248,12 +295,18 @@ async function notifyAdminOfSubmission(session) {
   const who = clientLabel(session) || 'A client';
   console.log(`[submission] ${who} submitted "${def ? def.title : session.formId}" (${session.id})`);
   const transport = mailTransport();
-  if (!transport || !process.env.ADMIN_EMAIL) return;
+  if (!transport) return;
+  // Notify the owning agent directly — not a shared company inbox, since
+  // agents' submissions are otherwise fully isolated from each other.
+  // ADMIN_EMAIL, if set, additionally gets a copy of every submission.
+  const agent = session.agentId ? await store.findAgentById(session.agentId).catch(() => null) : null;
+  const recipients = [agent ? agent.email : null, process.env.ADMIN_EMAIL || null].filter(Boolean);
+  if (!recipients.length) return;
   try {
     const base = process.env.PUBLIC_URL || `http://localhost:${PORT}`;
     await transport.sendMail({
       from: process.env.MAIL_FROM || process.env.SMTP_USER,
-      to: process.env.ADMIN_EMAIL,
+      to: recipients.join(', '),
       subject: `New form submission: ${def ? def.title : session.formId} — ${who}`,
       text:
         `${who} has submitted a "${def ? def.title : session.formId}" form.\n\n` +
@@ -261,7 +314,7 @@ async function notifyAdminOfSubmission(session) {
         `Submission ID: ${session.id}`,
     });
   } catch (err) {
-    console.error('admin notification email failed:', err.message);
+    console.error('submission notification email failed:', err.message);
   }
 }
 
@@ -286,7 +339,7 @@ app.post('/api/sessions/:id/generate', wrap(async (req, res) => {
   if (!session) return;
   const def = definitions[session.formId];
   if (!def) return res.status(500).json({ error: 'Definition missing' });
-  const admin = isAdmin(req);
+  const admin = isSessionOwner(req, session);
 
   if (!admin && session.status !== 'in_progress') {
     return res.status(403).json({ error: 'This form has already been submitted for review.' });
@@ -325,7 +378,7 @@ app.post('/api/sessions/:id/generate', wrap(async (req, res) => {
 app.get('/api/sessions/:id/pdf', wrap(async (req, res) => {
   const session = await loadSession(req, res);
   if (!session) return;
-  if (session.status === 'in_progress' && !isAdmin(req)) {
+  if (session.status === 'in_progress' && !isSessionOwner(req, session)) {
     return res.status(404).json({ error: 'PDF not generated yet' });
   }
   const def = definitions[session.formId];
@@ -369,18 +422,6 @@ app.post('/api/sessions/:id/email', wrap(async (req, res) => {
   });
   res.json({ ok: true });
 }));
-
-// ---------- admin login ----------
-
-app.post('/api/admin/login', (req, res) => {
-  const { password } = req.body || {};
-  if (!timingSafeEqual(password || '', ADMIN_PASSWORD)) {
-    return res.status(401).json({ error: 'Incorrect password' });
-  }
-  // The password itself doubles as the API token; it never leaves this
-  // deployment and can be rotated by changing ADMIN_PASSWORD.
-  res.json({ ok: true, token: ADMIN_PASSWORD });
-});
 
 // Start a server only when run directly; on Vercel the app is exported and
 // invoked as a serverless function (see api/index.js).

@@ -12,22 +12,34 @@ answers if the wrong form was opened), **💾 Save**, and **👁 Preview PDF**
 autosave on every change, so an unfinished form can always be resumed from
 the home page.
 
-## Client / Admin workflow
+## Client / Agent (admin) workflow
 
-- **Clients** use the root link (`/`). They only ever see their own forms
-  (tracked in their browser). On submit, the form is locked, a copy is
-  downloadable, and the submission lands in the admin queue. Witness and
+Every admin is an **agent** — a Pru Life UK servicing agent with their own
+Google-authenticated account. There's no shared admin password and no
+company-wide view: each agent only ever sees the submissions tagged as
+theirs. Signing in with Google for the first time creates that agent's
+account automatically (open self-service, no invite step).
+
+- **Clients** use the root link (`/`). The first time a client visits, they
+  either arrive via an agent's personal link (`/?a=<agent-code>`, which tags
+  every form they start) or pick their agent by name from a directory shown
+  on first visit. That choice is remembered in their browser. Clients only
+  ever see their own forms. On submit, the form is locked, a copy is
+  downloadable, and the submission lands in that agent's queue. Witness and
   agent-signature questions are hidden from clients.
-- **Admin** uses `/admin`, protected by `ADMIN_PASSWORD` (set it in the
-  environment — the default is `pruforms-admin` and prints a warning). The
-  dashboard lists every submission with a **Needs review** badge; opening one
-  allows editing *any* answer, filling the admin-only witness/agent
-  signature pads, previewing, and **Finalize** — which regenerates the PDF
-  and marks the submission *Reviewed*.
+- **Agents** use `/admin` and sign in with Google. The dashboard lists their
+  own submissions with a **Needs review** badge; opening one allows editing
+  *any* answer, filling the admin-only witness/agent signature pads,
+  previewing, and **Finalize** — which regenerates the PDF and marks the
+  submission *Reviewed*. The dashboard also shows the agent's personal
+  client link so they can share it.
 - The server enforces the roles: once submitted, edits/regeneration/deletes
-  require the admin token; the full session list is admin-only.
-- If `SMTP_*` and `ADMIN_EMAIL` are configured, the admin is emailed on each
-  new submission (set `PUBLIC_URL` so the email links to your deployment).
+  require being signed in as the owning agent; the submission list only ever
+  returns that agent's own sessions.
+- If `SMTP_*` is configured, the owning agent is emailed on each new
+  submission; set `ADMIN_EMAIL` too to additionally CC a shared company
+  inbox on every submission across all agents (set `PUBLIC_URL` so the email
+  links to your deployment).
 
 ## Supported forms
 
@@ -86,35 +98,47 @@ pluggable (`lib/store.js` selects the backend):
 
 ## Deploying to Vercel + Supabase
 
-**1. Supabase — create the table.** In your Supabase project: SQL Editor →
+**1. Supabase — create the tables.** In your Supabase project: SQL Editor →
 New query → paste the contents of [`supabase/schema.sql`](supabase/schema.sql)
-→ Run. This creates a `sessions` table (RLS on, no public policies — the
-server uses the service-role key).
+→ Run. This creates `sessions` and `agents` tables (RLS on, no public
+policies — the server uses the service-role key). Already have an older
+`sessions` table without `agent_id`? Run just the migration snippet at the
+bottom of that file instead.
 
 **2. Supabase — copy two values.** Project Settings → API:
 - **Project URL** → `SUPABASE_URL`
 - **`service_role` secret key** → `SUPABASE_SERVICE_ROLE_KEY` (keep secret,
   never commit it or expose it to the browser)
 
-**3. Vercel — import the repo** (`hfbaliza/pruforms`). No build step is
+**3. Google — create an OAuth Client ID.** In the
+[Google Cloud Console](https://console.cloud.google.com/apis/credentials):
+create an OAuth 2.0 Client ID, application type **Web application**, and add
+your deployed URL (and `http://localhost:3000` for local dev) under
+**Authorized JavaScript origins**. Copy the client ID → `GOOGLE_CLIENT_ID`
+(this value is public, safe to expose to the browser). Also generate a
+random secret for `SESSION_JWT_SECRET`, e.g. `openssl rand -hex 32`.
+
+**4. Vercel — import the repo** (`hfbaliza/pruforms`). No build step is
 needed; `vercel.json` routes every request to the Express app in
 `api/index.js`.
 
-**4. Vercel — set Environment Variables** (Project → Settings → Environment
+**5. Vercel — set Environment Variables** (Project → Settings → Environment
 Variables), then redeploy:
 
 | Variable | Required | Purpose |
 |----------|----------|---------|
-| `ADMIN_PASSWORD` | ✅ | Password for the `/admin` dashboard |
+| `GOOGLE_CLIENT_ID` | ✅ | OAuth client id agents sign in with |
+| `SESSION_JWT_SECRET` | ✅ | Signs each agent's session token |
 | `SUPABASE_URL` | ✅ | Supabase project URL |
 | `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Supabase service-role key (server-side) |
-| `ADMIN_EMAIL` | – | Emailed when a client submits (needs SMTP) |
+| `ADMIN_EMAIL` | – | CC'd on every submission across all agents (needs SMTP) |
 | `PUBLIC_URL` | – | Base URL used in notification links |
 | `SMTP_HOST/PORT/USER/PASS/SECURE`, `MAIL_FROM` | – | Email sending |
 
-**5. Verify.** Open `https://your-app.vercel.app/api/health` — it should show
+**6. Verify.** Open `https://your-app.vercel.app/api/health` — it should show
 `{"ok":true,"backend":"supabase",...}`. Then `/` is the client link to share
-and `/admin` is the reviewer dashboard.
+and `/admin` is where agents sign in. The first agent to sign in with Google
+there gets their own account and personal client link automatically.
 
 See [`.env.example`](.env.example) for the full list. Other persistent-disk
 hosts (Render, Railway, Fly.io, a VPS) also work — with no Supabase, they use
@@ -123,21 +147,24 @@ the file store; set `SUPABASE_URL` to use Supabase there too.
 ## API overview
 
 ```
-GET    /api/forms                    list forms
-GET    /api/forms/:id                full definition
-POST   /api/sessions {formId}        start an interview
-GET    /api/sessions                 list all submissions (admin only)
-POST   /api/sessions/lookup {ids}     summaries for the client's own ids
-GET    /api/sessions/:id             load a session (resume)
-PUT    /api/sessions/:id/answers     autosave answers (locked after submit)
-GET    /api/sessions/:id/preview.pdf draft PDF from current answers
-POST   /api/sessions/:id/generate    submit (client) / finalize (admin)
-GET    /api/sessions/:id/pdf         view/download the PDF (?download=1)
-POST   /api/sessions/:id/email {to}  email the PDF (admin, needs SMTP env)
-DELETE /api/sessions/:id             discard a session
-POST   /api/admin/login {password}   exchange password for the admin token
-GET    /api/health                   status + active storage backend
+GET    /api/forms                      list forms
+GET    /api/forms/:id                  full definition
+GET    /api/agents                     public directory (client "pick your agent")
+GET    /api/agents/by-code/:code       resolve an agent's personal link
+POST   /api/auth/google {idToken}      sign in (or auto-register) an agent
+POST   /api/sessions {formId,agentId}  start an interview, tagged to an agent
+GET    /api/sessions                   list the signed-in agent's own submissions
+POST   /api/sessions/lookup {ids}      summaries for the client's own ids
+GET    /api/sessions/:id               load a session (resume)
+PUT    /api/sessions/:id/answers       autosave answers (locked after submit)
+GET    /api/sessions/:id/preview.pdf   draft PDF from current answers
+POST   /api/sessions/:id/generate      submit (client) / finalize (owning agent)
+GET    /api/sessions/:id/pdf           view/download the PDF (?download=1)
+POST   /api/sessions/:id/email {to}    email the PDF (owning agent, needs SMTP env)
+DELETE /api/sessions/:id               discard a session
+GET    /api/config                     public config (Google client id)
+GET    /api/health                     status + active storage backend
 ```
 
-Admin API calls require the `x-admin-token` header (the value of
-`ADMIN_PASSWORD`).
+Agent-only calls require an `Authorization: Bearer <token>` header, where
+`<token>` is the value returned from `/api/auth/google` after signing in.

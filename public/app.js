@@ -17,7 +17,12 @@ const state = {
   pads: {},            // questionId -> SignaturePad
   pending: {},         // answers not yet flushed to the server
   flushTimer: null,
-  adminToken: localStorage.getItem('pruforms.adminToken') || null,
+  // The signed-in agent (admin side): {id, code, name, email} + their token.
+  agentToken: localStorage.getItem('pruforms.agentToken') || null,
+  agent: JSON.parse(localStorage.getItem('pruforms.agent') || 'null'),
+  // The agent a *client* is filling forms for (client side, no auth involved
+  // — just tags every session they create so it lands in that agent's list).
+  myAgent: JSON.parse(localStorage.getItem('pruforms.myAgent') || 'null'),
 };
 
 /* ---- client-side record of "my" sessions (this browser) ---- */
@@ -70,6 +75,39 @@ function isDismissedForm(id) {
   return dismissedFormIds().includes(id);
 }
 
+/* ---- which agent a client is filling forms for ---- */
+
+function setMyAgent(agent) {
+  state.myAgent = agent;
+  localStorage.setItem('pruforms.myAgent', JSON.stringify(agent));
+}
+
+function clearMyAgent() {
+  state.myAgent = null;
+  localStorage.removeItem('pruforms.myAgent');
+}
+
+// Resolves which agent this client belongs to before anything else renders:
+// an ?a=<code> link takes priority (and is remembered for next time), then
+// whatever was already picked/remembered in this browser. Returns null if
+// neither is available, so the caller can show the picker screen instead.
+async function resolveMyAgent() {
+  const url = new URL(window.location.href);
+  const code = url.searchParams.get('a');
+  if (code) {
+    url.searchParams.delete('a');
+    window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+    try {
+      const agent = await api(`/api/agents/by-code/${encodeURIComponent(code)}`);
+      setMyAgent(agent);
+      return agent;
+    } catch {
+      /* unknown/stale code — fall through to whatever's already remembered */
+    }
+  }
+  return state.myAgent;
+}
+
 /* ================= conditions (mirror of server logic) ================= */
 
 function evalCondition(cond, answers) {
@@ -111,7 +149,7 @@ function visibleQuestionsOf(section) {
 
 async function api(path, opts = {}) {
   const headers = { 'Content-Type': 'application/json' };
-  if (state.adminToken) headers['x-admin-token'] = state.adminToken;
+  if (state.agentToken) headers['Authorization'] = `Bearer ${state.agentToken}`;
   const res = await fetch(path, { headers, ...opts });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
@@ -254,6 +292,9 @@ async function showHome() {
   window.scrollTo(0, 0);
   if (IS_ADMIN) return showAdmin();
   setTopNote('Client Self-Service Forms');
+  app.innerHTML = '<div class="loading">Loading…</div>';
+  const agent = await resolveMyAgent();
+  if (!agent) return showAgentPicker();
   state.def = null;
   state.session = null;
   state.previewOpen = false;
@@ -300,6 +341,8 @@ async function showHome() {
       <p>Fill out, review, and submit official Pru Life UK policy forms online.
          Your answers save automatically, and you can download a signed copy for
          your personal records.</p>
+      <p class="agent-note">Filling forms with <b>${esc(agent.name)}</b> as your servicing agent.
+        <a href="#" id="changeAgentLink">Not you? Change</a></p>
     </div>
 
     <div class="tabs" role="tablist">
@@ -374,6 +417,54 @@ async function showHome() {
       forgetSession(el.dataset.discard);
       showHome();
     }));
+  document.getElementById('changeAgentLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    clearMyAgent();
+    showHome();
+  });
+}
+
+/* ---- pick a servicing agent (no ?a= link, or an unknown/stale one) ---- */
+
+async function showAgentPicker() {
+  window.scrollTo(0, 0);
+  setTopNote('Select your agent');
+  app.classList.remove('wide');
+  app.innerHTML = '<div class="loading">Loading agents…</div>';
+  const agents = await api('/api/agents');
+
+  app.innerHTML = `
+    <div class="login-card" style="max-width:460px">
+      <h2>Who's your servicing agent?</h2>
+      <p>Pick the Pru Life UK agent helping you, so your forms reach them for review.</p>
+      <div class="searchbar">${icon('search')}<input id="agentSearch" placeholder="Search agents by name…" autocomplete="off"></div>
+      <div class="session-list" id="agentList" style="text-align:left"></div>
+      <div class="no-results hidden" id="noAgents">No agents match your search.</div>
+    </div>
+  `;
+
+  const listEl = document.getElementById('agentList');
+  const render = (list) => {
+    listEl.innerHTML = list.map((a) => `
+      <div class="session-item">
+        <div class="meta"><b>${esc(a.name)}</b></div>
+        <button class="btn primary small" data-agent="${esc(a.id)}">Select</button>
+      </div>`).join('');
+    listEl.querySelectorAll('[data-agent]').forEach((el) =>
+      el.addEventListener('click', () => {
+        const agent = agents.find((a) => a.id === el.dataset.agent);
+        setMyAgent(agent);
+        showHome();
+      }));
+  };
+  render(agents);
+
+  document.getElementById('agentSearch').addEventListener('input', (e) => {
+    const q = e.target.value.trim().toLowerCase();
+    const filtered = agents.filter((a) => a.name.toLowerCase().includes(q));
+    render(filtered);
+    document.getElementById('noAgents').classList.toggle('hidden', filtered.length > 0 || !q);
+  });
 }
 
 async function startForm(formId) {
@@ -382,7 +473,7 @@ async function startForm(formId) {
   const def = await api(`/api/forms/${formId}`);
   const session = await api('/api/sessions', {
     method: 'POST',
-    body: JSON.stringify({ formId }),
+    body: JSON.stringify({ formId, agentId: state.myAgent && state.myAgent.id }),
   });
   if (!IS_ADMIN) rememberSession(session.id);
   state.def = def;
@@ -415,44 +506,80 @@ async function resumeSession(sessionId, toReview = false) {
 
 /* ================= admin views ================= */
 
-function showAdminLogin(message) {
+let _gsiLoading;
+function loadGoogleScript() {
+  if (window.google && window.google.accounts && window.google.accounts.id) return Promise.resolve();
+  if (_gsiLoading) return _gsiLoading;
+  _gsiLoading = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.async = true;
+    s.defer = true;
+    s.onload = resolve;
+    s.onerror = () => reject(new Error('Could not load Google Sign-In'));
+    document.head.appendChild(s);
+  });
+  return _gsiLoading;
+}
+
+async function showAdminLogin(message) {
   window.scrollTo(0, 0);
-  setTopNote('Admin sign-in');
+  setTopNote('Agent sign-in');
   app.classList.remove('wide');
   app.innerHTML = `
     <div class="login-card">
-      <h2>Administrator sign-in</h2>
-      <p>Enter the admin password to review client submissions.</p>
-      <input type="password" id="adminPass" placeholder="Admin password" autocomplete="current-password">
-      <button class="btn primary" id="loginBtn">Sign in</button>
+      <h2>Agent sign-in</h2>
+      <p>Sign in with your Google account to review your own clients' submissions.
+         First time here? Signing in creates your agent account automatically.</p>
+      <div id="googleBtn" style="display:flex;justify-content:center;margin-top:6px"></div>
       <div class="error-msg" id="loginMsg">${esc(message || '')}</div>
     </div>
   `;
-  const tryLogin = async () => {
-    const password = document.getElementById('adminPass').value;
-    const msg = document.getElementById('loginMsg');
-    try {
-      const { token } = await api('/api/admin/login', {
-        method: 'POST',
-        body: JSON.stringify({ password }),
-      });
-      state.adminToken = token;
-      localStorage.setItem('pruforms.adminToken', token);
-      showAdmin();
-    } catch (err) {
-      msg.textContent = err.message;
-    }
-  };
-  document.getElementById('loginBtn').addEventListener('click', tryLogin);
-  document.getElementById('adminPass').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') tryLogin();
+  const msg = document.getElementById('loginMsg');
+  const { googleClientId } = await api('/api/config').catch(() => ({ googleClientId: '' }));
+  if (!googleClientId) {
+    msg.textContent = 'Google sign-in is not configured yet — set GOOGLE_CLIENT_ID.';
+    return;
+  }
+  try {
+    await loadGoogleScript();
+  } catch (err) {
+    msg.textContent = err.message;
+    return;
+  }
+  window.google.accounts.id.initialize({
+    client_id: googleClientId,
+    callback: async (response) => {
+      try {
+        const { token, agent } = await api('/api/auth/google', {
+          method: 'POST',
+          body: JSON.stringify({ idToken: response.credential }),
+        });
+        state.agentToken = token;
+        state.agent = agent;
+        localStorage.setItem('pruforms.agentToken', token);
+        localStorage.setItem('pruforms.agent', JSON.stringify(agent));
+        showAdmin();
+      } catch (err) {
+        msg.textContent = err.message;
+      }
+    },
   });
-  setTimeout(() => document.getElementById('adminPass').focus(), 30);
+  window.google.accounts.id.renderButton(document.getElementById('googleBtn'), {
+    theme: 'outline', size: 'large', width: 280,
+  });
+}
+
+function signOutAgent() {
+  state.agentToken = null;
+  state.agent = null;
+  localStorage.removeItem('pruforms.agentToken');
+  localStorage.removeItem('pruforms.agent');
 }
 
 async function showAdmin() {
   window.scrollTo(0, 0);
-  if (!state.adminToken) return showAdminLogin();
+  if (!state.agentToken || !state.agent) return showAdminLogin();
   setTopNote('Admin dashboard');
   state.def = null;
   state.session = null;
@@ -464,8 +591,7 @@ async function showAdmin() {
     sessions = await api('/api/sessions');
   } catch (err) {
     if (err.status === 401) {
-      state.adminToken = null;
-      localStorage.removeItem('pruforms.adminToken');
+      signOutAgent();
       return showAdminLogin('Session expired — please sign in again.');
     }
     throw err;
@@ -490,6 +616,8 @@ async function showAdmin() {
       <button class="btn danger-ghost small" data-del="${esc(s.id)}">Delete</button>
     </div>`;
 
+  const agentLink = `${window.location.origin}/?a=${state.agent.code}`;
+
   app.innerHTML = `
     <div class="admin-head">
       <div class="admin-head-text">
@@ -497,6 +625,11 @@ async function showAdmin() {
         <h1>Submissions</h1>
         <p>Forms submitted by clients arrive here for review. Open one to edit any
            answer, add witness signatures, and produce the final document.</p>
+        <p class="agent-note">Signed in as <b>${esc(state.agent.name)}</b> — only your own clients' forms are shown.</p>
+        <div class="agent-link-row">
+          <input type="text" id="agentLinkInput" readonly value="${esc(agentLink)}">
+          <button class="btn ghost small" id="copyAgentLink">Copy your client link</button>
+        </div>
       </div>
       <button class="btn ghost small" id="logoutBtn">Sign out</button>
     </div>
@@ -513,9 +646,20 @@ async function showAdmin() {
   `;
 
   document.getElementById('logoutBtn').addEventListener('click', () => {
-    state.adminToken = null;
-    localStorage.removeItem('pruforms.adminToken');
+    signOutAgent();
     showAdminLogin();
+  });
+  document.getElementById('copyAgentLink').addEventListener('click', async (e) => {
+    const btn = e.currentTarget; // capture before the await — currentTarget is null afterward
+    try {
+      await navigator.clipboard.writeText(agentLink);
+    } catch {
+      document.getElementById('agentLinkInput').select();
+      document.execCommand('copy');
+    }
+    const original = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = original; }, 1600);
   });
   app.querySelectorAll('[data-open]').forEach((el) =>
     el.addEventListener('click', () => resumeSession(el.dataset.open, true)));
