@@ -392,37 +392,6 @@ app.get('/api/sessions/:id/pdf', wrap(async (req, res) => {
   res.send(bytes);
 }));
 
-app.post('/api/sessions/:id/email', wrap(async (req, res) => {
-  const session = await loadSession(req, res);
-  if (!session) return;
-  const { to } = req.body || {};
-  if (!to || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
-    return res.status(400).json({ error: 'Valid "to" address required' });
-  }
-  if (session.status === 'in_progress') {
-    return res.status(400).json({ error: 'Generate the PDF first' });
-  }
-  const transport = mailTransport();
-  if (!transport) {
-    return res.status(501).json({
-      error:
-        'Email is not configured. Set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS and MAIL_FROM environment variables.',
-    });
-  }
-  const def = definitions[session.formId];
-  const { bytes } = await generatePdf(def, session.answers);
-  await transport.sendMail({
-    from: process.env.MAIL_FROM || process.env.SMTP_USER,
-    to,
-    subject: `Completed form: ${def ? def.title : session.formId}`,
-    text: 'Please find the completed form attached.',
-    attachments: [
-      { filename: pdfFileName(def, session), content: bytes, contentType: 'application/pdf' },
-    ],
-  });
-  res.json({ ok: true });
-}));
-
 // Start a server only when run directly; on Vercel the app is exported and
 // invoked as a serverless function (see api/index.js).
 if (require.main === module) {

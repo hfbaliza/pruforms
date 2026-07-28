@@ -57,7 +57,8 @@ npm install
 npm start          # http://localhost:3000
 ```
 
-Optional email export — configure SMTP via environment variables:
+Optional submission-notification emails — configure SMTP via environment
+variables (the owning agent gets emailed when a client submits a form):
 
 ```bash
 SMTP_HOST=smtp.example.com SMTP_PORT=587 SMTP_USER=me SMTP_PASS=secret \
@@ -79,11 +80,11 @@ MAIL_FROM="Forms <forms@example.com>" npm start
 - `lib/pdf-filler.js` — applies mappings with pdf-lib, regenerates
   appearances, **flattens** the form, then draws signatures/overlays on top.
 - `server.js` — Express API: forms, sessions (auto-saved answers, resume
-  later), PDF generation, download/print/email endpoints.
+  later), PDF generation, download/print endpoints.
 - `public/` — dependency-free single-page app: page-per-section form UI with
   progress steps, live PDF preview panel (`/api/sessions/:id/preview.pdf`),
   signature pad (Clear/Undo/Redraw), save/exit controls, review-and-edit
-  step, and export actions (download, print, save, email).
+  step, and export actions (download, print, save).
 
 ## Storage
 
@@ -133,7 +134,7 @@ Variables), then redeploy:
 | `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Supabase service-role key (server-side) |
 | `ADMIN_EMAIL` | – | CC'd on every submission across all agents (needs SMTP) |
 | `PUBLIC_URL` | – | Base URL used in notification links |
-| `SMTP_HOST/PORT/USER/PASS/SECURE`, `MAIL_FROM` | – | Email sending |
+| `SMTP_HOST/PORT/USER/PASS/SECURE`, `MAIL_FROM` | – | Submission-notification emails |
 
 **6. Verify.** Open `https://your-app.vercel.app/api/health` — it should show
 `{"ok":true,"backend":"supabase",...}`. Then `/` is the client link to share
@@ -160,7 +161,6 @@ PUT    /api/sessions/:id/answers       autosave answers (locked after submit)
 GET    /api/sessions/:id/preview.pdf   draft PDF from current answers
 POST   /api/sessions/:id/generate      submit (client) / finalize (owning agent)
 GET    /api/sessions/:id/pdf           view/download the PDF (?download=1)
-POST   /api/sessions/:id/email {to}    email the PDF (owning agent, needs SMTP env)
 DELETE /api/sessions/:id               discard a session
 GET    /api/config                     public config (Google client id)
 GET    /api/health                     status + active storage backend

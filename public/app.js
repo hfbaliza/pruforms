@@ -1170,40 +1170,13 @@ function showDone() {
       <div class="done-actions">
         <a class="btn primary" href="/api/sessions/${sid}/pdf?download=1">Download PDF</a>
         <button class="btn ghost" id="printBtn">Print</button>
-        ${IS_ADMIN ? '<button class="btn ghost" id="emailBtn">Send by email</button>' : ''}
         <button class="btn ghost" id="homeBtn">${IS_ADMIN ? 'Back to dashboard' : 'Done'}</button>
       </div>
-      ${IS_ADMIN ? `
-        <div class="email-row" id="emailRow" style="display:none">
-          <input type="email" id="emailTo" placeholder="name@example.com">
-          <button class="btn primary" id="emailSend">Send</button>
-        </div>
-        <div class="error-msg" id="emailMsg" style="text-align:center"></div>` : ''}
       <iframe class="pdf-frame" src="/api/sessions/${sid}/pdf" title="Completed PDF preview"></iframe>
     </div>
   `;
   document.getElementById('printBtn').addEventListener('click', () => printPdf(sid));
   document.getElementById('homeBtn').addEventListener('click', () => (IS_ADMIN ? showAdmin() : showHome()));
-  if (IS_ADMIN) {
-    document.getElementById('emailBtn').addEventListener('click', () => {
-      const row = document.getElementById('emailRow');
-      row.style.display = row.style.display === 'none' ? 'flex' : 'none';
-    });
-    document.getElementById('emailSend').addEventListener('click', async () => {
-      const to = document.getElementById('emailTo').value.trim();
-      const msg = document.getElementById('emailMsg');
-      msg.textContent = 'Sending…';
-      try {
-        await api(`/api/sessions/${sid}/email`, {
-          method: 'POST',
-          body: JSON.stringify({ to }),
-        });
-        msg.textContent = '✓ Sent!';
-      } catch (err) {
-        msg.textContent = err.message;
-      }
-    });
-  }
 }
 
 /* ================= boot ================= */
