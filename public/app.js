@@ -50,31 +50,6 @@ function forgetSession(id) {
   );
 }
 
-function dismissedFormIds() {
-  try {
-    return JSON.parse(localStorage.getItem('pruforms.dismissedForms') || '[]');
-  } catch {
-    return [];
-  }
-}
-
-function rememberDismissedForm(id) {
-  const ids = dismissedFormIds().filter((x) => x !== id);
-  ids.unshift(id);
-  localStorage.setItem('pruforms.dismissedForms', JSON.stringify(ids.slice(0, 100)));
-}
-
-function clearDismissedForm(id) {
-  localStorage.setItem(
-    'pruforms.dismissedForms',
-    JSON.stringify(dismissedFormIds().filter((x) => x !== id))
-  );
-}
-
-function isDismissedForm(id) {
-  return dismissedFormIds().includes(id);
-}
-
 /* ---- which agent a client is filling forms for ---- */
 
 function setMyAgent(agent) {
@@ -311,7 +286,7 @@ async function showHome() {
 
   const inProgress = mine.filter((s) => s.status === 'in_progress' && s.answered > 0);
   const submitted = mine.filter((s) => s.status !== 'in_progress');
-  const availableForms = forms.filter((f) => !isDismissedForm(f.id));
+  const availableForms = forms;
 
   const cardHtml = (f) => {
     const meta = FORM_META[f.id] || { icon: 'doc', time: '~5 mins' };
@@ -365,7 +340,7 @@ async function showHome() {
             <span>${s.answered} answer${s.answered === 1 ? '' : 's'} saved · last updated ${new Date(s.updatedAt).toLocaleString()}</span>
           </div>
           <button class="btn ghost small" data-resume="${esc(s.id)}">Continue</button>
-          <button class="btn danger-ghost small" data-discard="${esc(s.id)}" data-form-id="${esc(s.formId)}">Discard</button>
+          <button class="btn danger-ghost small" data-discard="${esc(s.id)}">Discard</button>
         </div>`).join('')}</div>`
       : emptyPanel('No forms in progress', 'Your unfinished forms will appear here automatically.')}
     </div>
@@ -413,7 +388,6 @@ async function showHome() {
     el.addEventListener('click', async () => {
       if (!confirm('Discard this saved form and its answers?')) return;
       await api(`/api/sessions/${el.dataset.discard}`, { method: 'DELETE' });
-      rememberDismissedForm(el.dataset.formId || el.dataset.discard);
       forgetSession(el.dataset.discard);
       showHome();
     }));
@@ -468,7 +442,6 @@ async function showAgentPicker() {
 }
 
 async function startForm(formId) {
-  clearDismissedForm(formId);
   app.innerHTML = '<div class="loading">Preparing the form…</div>';
   const def = await api(`/api/forms/${formId}`);
   const session = await api('/api/sessions', {
@@ -997,7 +970,6 @@ async function exitForm() {
   if (!keep) {
     if (!confirm('Really discard all answers for this form?')) return;
     await api(`/api/sessions/${state.session.id}`, { method: 'DELETE' }).catch(() => {});
-    if (state.session.status === 'in_progress') rememberDismissedForm(state.def?.id || state.session.formId || state.session.id);
     forgetSession(state.session.id);
   }
   showHome();
